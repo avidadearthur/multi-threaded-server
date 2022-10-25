@@ -16,15 +16,16 @@ void teardown(void) {
 }
 START_TEST(test_ListFree)
     {
-        // Test free NULL
+        //t0 Test free NULL
         dplist_t *list = NULL;
         dpl_free(&list);
-        ck_assert_msg(list == NULL, "Failure: expected result to be NULL");
+        ck_assert_msg(list == NULL, "t0 Failure: expected result to be NULL");
 
-        // Test free empty list
+        //t1 Test free empty list
         list = dpl_create();
         dpl_free(&list);
-        ck_assert_msg(list == NULL, "Failure: expected result to be NULL");
+        ck_assert_msg(list == NULL, "t1 Failure: expected result to be NULL");
+
         // TODO : Test free with one element
 
         // TODO : Test free with multiple element
@@ -54,6 +55,16 @@ START_TEST(test_ListInsertAtIndexListEmpty)
     // TODO : Test inserting at index 0
 
     // TODO : Test inserting at index 99
+}
+END_TEST
+
+START_TEST(test_dpl_get_element_at_index)
+{
+    // Test inserting at index -1
+    dplist_t *list = dpl_create();
+    dplist_t *result = dpl_insert_at_index(list, 'A', 0);
+    ck_assert_msg(dpl_get_element_at_index(result,0) == 'A', "Failure: expected list to have size 'A' at pos 0");
+    dpl_free(&list);
 }
 END_TEST
 
