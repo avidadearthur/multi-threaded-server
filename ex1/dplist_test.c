@@ -60,11 +60,46 @@ END_TEST
 
 START_TEST(test_dpl_get_element_at_index)
 {
-    // Test inserting at index -1
     dplist_t *list = dpl_create();
+    dpl_insert_at_index(list, 'B', 1);
+    dpl_insert_at_index(list, 'C', 2);
     dplist_t *result = dpl_insert_at_index(list, 'A', 0);
-    ck_assert_msg(dpl_get_element_at_index(result,0) == 'A', "Failure: expected list to have size 'A' at pos 0");
+    ck_assert_msg(dpl_get_element_at_index(result,0) == 'A', "t0 Failure: expected list to have 'A' at pos 0");
+    ck_assert_msg(dpl_get_element_at_index(result,1) == 'B', "t0 Failure: expected list to have 'B' at pos 0");
+
+    // If 'index' is 0 or negative, the element of the first list node is returned.
+    ck_assert_msg(dpl_get_element_at_index(result,-8) == 'A', "t1 Failure: expected to return first element for negative index");
+    // If 'index' is bigger than the number of elements in the list, the element of the last list node is returned.
+    ck_assert_msg(dpl_get_element_at_index(result,6) == 'C', "t2 Failure: expected to return last element for index out of bounds");
+    // TODO : If the list is empty, 0 is returned.
+    // TODO : If 'list' is NULL, 0 is returned.
+}
+END_TEST
+
+START_TEST(test_dpl_size)
+{
+    dplist_t *list = NULL;
+    // TODO: If 'list' is is NULL, -1 is returned.
+    ck_assert_msg(dpl_size(list) == -1, "t0 Failure: Empty list - expected to return -1, got a size of %d",
+    dpl_size(list));
+
+    list = dpl_create();
+    ck_assert_msg(dpl_size(list) == 0, "t1 Failure: expected to return 0, got a size of %d",
+    dpl_size(list));
+
+    dpl_insert_at_index(list, 'B', 1);
+    ck_assert_msg(dpl_size(list) == 1, "t2 Failure: expected to return 1, got a size of %d",
+    dpl_size(list));
+
+    dpl_insert_at_index(list, 'C', 2);
+    dplist_t *result = dpl_insert_at_index(list, 'A', 0);
+
+    ck_assert_msg(dpl_size(result) == 3, "t2 Failure: expected to return 3, got a size of %d",
+                  dpl_size(result));
+
     dpl_free(&list);
+
+
 }
 END_TEST
 
@@ -84,6 +119,8 @@ int main(void) {
     tcase_add_test(tc1_1, test_ListInsertAtIndexListNULL);
     tcase_add_test(tc1_1, test_ListInsertAtIndexListEmpty);
     // Add other tests here...
+    tcase_add_test(tc1_1, test_dpl_get_element_at_index);
+    tcase_add_test(tc1_1, test_dpl_size);
 
     srunner_run_all(sr, CK_VERBOSE);
 

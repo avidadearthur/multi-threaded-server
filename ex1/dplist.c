@@ -128,9 +128,15 @@ dplist_t *dpl_remove_at_index(dplist_t *list, int index) {
 }
 
 int dpl_size(dplist_t *list) {
-
-    //TODO: add your code here
-    return -1;
+    int count = 0;
+    if (list == NULL) return -1;
+    dplist_node_t *dummy;
+    dummy = list->head;
+    while(dummy->next != NULL){
+        count++;
+        dummy = dummy->next;
+    }
+    return count;
 }
 
 dplist_node_t *dpl_get_reference_at_index(dplist_t *list, int index) {
@@ -147,20 +153,12 @@ dplist_node_t *dpl_get_reference_at_index(dplist_t *list, int index) {
 element_t dpl_get_element_at_index(dplist_t *list, int index) {
 
     //TODO: add your code here
-    /** Returns an index to the first list node in the list containing 'element'.
-    * - the first list node has index 0.
-    * - If 'element' is not found in the list, -1 is returned.
-    * - If 'list' is NULL, -1 is returned.
-    * \param list a pointer to the list
-    * \param element the element to look for
-    * \return the index of the element that matches 'element'
-    */
+    element_t element;
     dplist_node_t *ref_at_index;
     ref_at_index = dpl_get_reference_at_index(list, index);
-    element_t element = ref_at_index->element;
+    element = ref_at_index->element;
 
     return element;
-
 }
 
 int dpl_get_index_of_element(dplist_t *list, element_t element) {
