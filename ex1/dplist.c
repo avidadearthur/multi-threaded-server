@@ -7,7 +7,7 @@
 #include <assert.h>
 #include "dplist.h"
 
-//#define DEBUG
+#define DEBUG
 
 /*
  * definition of error codes
@@ -58,19 +58,17 @@ dplist_t *dpl_create() {
 }
 
 void dpl_free(dplist_t **list) {
-    //TODO: test_ListFree add your code here
-    /** Deletes all elements in the list
-     * - Every list node of the list needs to be deleted. (free memory)
-     * - The list itself also needs to be deleted. (free all memory)
-     * - '*list' must be set to NULL.
-     * \param list a double pointer to the list
-     */
+    //TODO: Every list node of the list needs to be deleted. (free memory)
+    //TODO: The list itself also needs to be deleted. (free all memory)
+    //TODO: '*list' must be set to NULL.
+
     if(*list != NULL){
         if((*list)->head == NULL){
             free(*list);
             *list = NULL;
         }
     }
+    // use remove at index recursively
 }
 
 /* Important note: to implement any list manipulation operator (insert, append, delete, sort, ...), always be aware of the following cases:
@@ -123,8 +121,34 @@ dplist_t *dpl_insert_at_index(dplist_t *list, element_t element, int index) {
 
 dplist_t *dpl_remove_at_index(dplist_t *list, int index) {
 
-    //TODO: add your code here
+    if (list == NULL) return NULL;
 
+    if (list->head == NULL) return list;
+
+    dplist_node_t *ref_del_at_index;
+    ref_del_at_index = dpl_get_reference_at_index(list, index);
+
+    dplist_node_t *prev_node = ref_del_at_index->prev;
+    dplist_node_t *next_node = ref_del_at_index->next;
+
+    // index == 0 (deleting the first node)
+    if (prev_node == NULL){
+        list->head = next_node;
+        // for when there's only one element left
+        if (next_node != NULL) next_node->prev = NULL;
+    }
+    else if (next_node == NULL){
+        prev_node->next = NULL;
+    }
+    else{
+        prev_node->next = next_node;
+        next_node->prev = prev_node;
+    }
+
+
+    free(ref_del_at_index);
+
+    return list;
 }
 
 int dpl_size(dplist_t *list) {
@@ -132,7 +156,7 @@ int dpl_size(dplist_t *list) {
     if (list == NULL) return -1;
     dplist_node_t *dummy;
     dummy = list->head;
-    while(dummy->next != NULL){
+    while(dummy != NULL){
         count++;
         dummy = dummy->next;
     }
@@ -152,7 +176,6 @@ dplist_node_t *dpl_get_reference_at_index(dplist_t *list, int index) {
 
 element_t dpl_get_element_at_index(dplist_t *list, int index) {
 
-    //TODO: add your code here
     element_t element;
     dplist_node_t *ref_at_index;
     ref_at_index = dpl_get_reference_at_index(list, index);
@@ -163,8 +186,18 @@ element_t dpl_get_element_at_index(dplist_t *list, int index) {
 
 int dpl_get_index_of_element(dplist_t *list, element_t element) {
 
-    //TODO: add your code here
+    if (list == NULL) return -1;
 
+    int index = 0;
+    dplist_node_t *dummy;
+    dummy = list->head;
+    while(dummy != NULL){
+        if (dummy->element == element) return index;
+        dummy = dummy->next;
+        index++;
+    }
+
+    return -1;
 }
 
 

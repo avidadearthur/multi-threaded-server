@@ -99,7 +99,116 @@ START_TEST(test_dpl_size)
 
     dpl_free(&list);
 
+}
+END_TEST
 
+START_TEST(test_dpl_get_index_of_element)
+{
+    dplist_t *list = NULL;
+    // TODO: If 'list' is is NULL, -1 is returned.
+    ck_assert_msg(dpl_get_index_of_element(list,'A') == -1, "t0 Failure: NULL list - expected to return -1");
+
+    //TODO:  If 'element' is not found in the list, -1 is returned.
+    list = dpl_create();
+    ck_assert_msg(dpl_get_index_of_element(list,'A') == -1, "t1 Failure: Element 'A' doesn't exist expected to return -1");
+
+
+    //TODO: the first list node has index 0.
+    dpl_insert_at_index(list, 'B', 1);
+    dpl_insert_at_index(list, 'C', 2);
+    dplist_t *result = dpl_insert_at_index(list, 'A', 0);
+
+    ck_assert_msg(dpl_get_index_of_element(list,'A') == 0, "t1 Failure: expected 'A' at pos 0, got %d",
+                  dpl_get_index_of_element(list,'A'));
+
+    ck_assert_msg(dpl_get_index_of_element(list,'C') == 2, "t1 Failure: expected 'C' at pos 0, got %d",
+                  dpl_get_index_of_element(list,'C'));
+
+    ck_assert_msg(dpl_get_index_of_element(list,'B') == 1, "t1 Failure: expected 'B' at pos 0, got %d",
+                  dpl_get_index_of_element(list,'B'));
+
+
+    dpl_free(&list);
+
+}
+END_TEST
+
+START_TEST(test_dpl_remove_at_index)
+{
+    dplist_t *list = NULL;
+    //TODO: If 'list' is is NULL, NULL is returned.
+    ck_assert_msg(dpl_remove_at_index(list,0) == NULL, "t0 Faliure: expeted NULL");
+
+    //TODO: If the list is empty, return the unmodified list.
+    list = dpl_create();
+    dpl_remove_at_index(list,0);
+    ck_assert_msg(dpl_size(dpl_remove_at_index(list,0)) == dpl_size(list), "t0 Faliure: expeted NULL");
+
+    //TODO: If 'index' is 0 or negative, the first list node is removed.
+    //TODO: If 'index' is bigger than the number of elements in the list, the last list node is removed.
+
+    dpl_insert_at_index(list, 'B', 1);
+    dpl_insert_at_index(list, 'A', 0);
+    dpl_insert_at_index(list, 'D', 3);
+    dplist_t *result = dpl_insert_at_index(list, 'C', 2);
+
+    // 0   1   2   3
+    // A = B = C = D
+
+    dpl_remove_at_index(list,-56); // should remove A
+    // 0   1   2
+    // B = C = D
+    ck_assert_msg(dpl_get_element_at_index(result,0) == 'B', "t0 Failure: expected list to have 'B' at pos 0 but go %c",
+                  dpl_get_element_at_index(result,0));
+    ck_assert_msg(dpl_get_element_at_index(result,2) == 'D', "t1 Failure: expected list to have 'C' at pos 0 but go %c",
+                  dpl_get_element_at_index(result,2));
+    dpl_remove_at_index(list,88); // should remove D
+    // 0   1
+    // B = C
+    ck_assert_msg(dpl_get_element_at_index(result,0) == 'B', "t2 Failure: expected list to have 'B' at pos 0 but go %c",
+                  dpl_get_element_at_index(result,0));
+    ck_assert_msg(dpl_get_element_at_index(result,1) == 'C', "t3 Failure: expected list to have 'C' at pos 0 but go %c",
+                  dpl_get_element_at_index(result,1));
+
+    free(list);
+    list = NULL;
+    list = dpl_create();
+
+    dpl_insert_at_index(list, 'A', 0);
+    dpl_insert_at_index(list, 'B', 1);
+    dpl_insert_at_index(list, 'C', 2);
+    dpl_insert_at_index(list, 'D', 3);
+    dpl_insert_at_index(list, 'E', 4);
+    dpl_insert_at_index(list, 'F', 5);
+
+    // 0   1   2   3   4   5
+    // A = B = C = D = E = F
+
+    // 0   1   2   3   4   5
+    // A =   = C = D = E = F
+    result = dpl_remove_at_index(list,1);
+    ck_assert_msg(dpl_size(result) == 5, "t6 Faliure: expeted size 5, got size %d",
+                  dpl_size(result));
+    // 0   1   2   3   4   5
+    // A = C = D = E = F
+    // A = C = D =  = F
+    dpl_remove_at_index(list,3);
+    // 0   1   2   3   4   5
+    // A = C = D = F
+    // A = C = D =
+    dpl_remove_at_index(list,3);
+    // 0   1   2   3   4   5
+    // A = C = D
+    //   = C = D
+    // C = D
+    result = dpl_remove_at_index(list,0);
+    ck_assert_msg(dpl_get_element_at_index(result,0) == 'C', "t4 Failure: expected list to have 'C' at pos 0 but go %c",
+                  dpl_get_element_at_index(result,0));
+    ck_assert_msg(dpl_get_element_at_index(result,1) == 'D', "t5 Failure: expected list to have 'D' at pos 0 but go %c",
+                  dpl_get_element_at_index(result,1));
+
+    ck_assert_msg(dpl_size(result) == 2, "t6 Faliure: expeted size 2, got size %d",
+                  dpl_size(result));
 }
 END_TEST
 
@@ -121,6 +230,8 @@ int main(void) {
     // Add other tests here...
     tcase_add_test(tc1_1, test_dpl_get_element_at_index);
     tcase_add_test(tc1_1, test_dpl_size);
+    tcase_add_test(tc1_1, test_dpl_get_index_of_element);
+    tcase_add_test(tc1_1, test_dpl_remove_at_index);
 
     srunner_run_all(sr, CK_VERBOSE);
 

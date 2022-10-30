@@ -15,6 +15,15 @@ test : dplist.c dplist_test.c
 	@echo -e '*************************'
 	./build/dplist_test
 
+debug: dplist.c dplist_debug.c
+	mkdir -p build
+	gcc -g dplist.c dplist_debug.c -o build/dplist_debug $(FLAGS)
+
+all : dplist.c dplist_test.c
+	mkdir -p build
+	gcc -g dplist.c dplist_test.c -o build/dplist_test $(FLAGS)
+
+
 .PHONY : clean check
 
 check : $(SOURCE) $(HEADERS)
