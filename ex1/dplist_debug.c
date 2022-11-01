@@ -81,8 +81,8 @@ void debug_dpl_free(){
 int main(void) {
 
     //debug_dpl_get_index_of_element;
-    //debug_dpl_remove_at_index();
-    debug_dpl_free();
+    debug_dpl_remove_at_index();
+    //debug_dpl_free();
 
     return 0;
 }
