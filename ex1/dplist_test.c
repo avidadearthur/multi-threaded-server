@@ -27,8 +27,18 @@ START_TEST(test_ListFree)
         ck_assert_msg(list == NULL, "t1 Failure: expected result to be NULL");
 
         // TODO : Test free with one element
+        list = dpl_create();
+        dpl_insert_at_index(list, 'B', 1);
+        dpl_free(&list);
+        ck_assert_msg(list == NULL, "t2 Failure: expected result to be NULL");
 
         // TODO : Test free with multiple element
+        list = dpl_create();
+        dpl_insert_at_index(list, 'A', 0);
+        dpl_insert_at_index(list, 'D', 3);
+        dpl_insert_at_index(list, 'C', 2);
+        dpl_free(&list);
+        ck_assert_msg(list == NULL, "t3 Failure: expected result to be NULL");
 
     }
 END_TEST
@@ -39,8 +49,14 @@ START_TEST(test_ListInsertAtIndexListNULL)
         dplist_t *result = dpl_insert_at_index(NULL, 'A', -1);
         ck_assert_msg(result == NULL, "Failure: expected list to be NULL");
         // TODO : Test inserting at index 0
+        result = dpl_insert_at_index(NULL, 'A', 0);
+        ck_assert_msg(result == NULL, "Failure: expected list to be NULL");
 
         // TODO : Test inserting at index 99
+        result = dpl_insert_at_index(NULL, 'A', 99);
+        ck_assert_msg(result == NULL, "Failure: expected list to be NULL");
+
+        dpl_free(&result);
     }
 END_TEST
 
@@ -49,30 +65,41 @@ START_TEST(test_ListInsertAtIndexListEmpty)
     // Test inserting at index -1
     dplist_t *list = dpl_create();
     dplist_t *result = dpl_insert_at_index(list, 'A', -1);
-    ck_assert_msg(dpl_size(result) == 1, "Failure: expected list to have size of 1, got a size of %d",
+    ck_assert_msg(dpl_size(result) == 1, "t0 Failure: expected list to have size of 1, got a size of %d",
                                          dpl_size(result));
-    dpl_free(&list);
     // TODO : Test inserting at index 0
+    dpl_insert_at_index(result, 'B', 0);
+    ck_assert_msg(dpl_get_element_at_index(result,0) == 'B', "t1 Failure: expected list to have 'B' at pos 0");
 
     // TODO : Test inserting at index 99
+    dpl_insert_at_index(result, 'C', 99);
+    ck_assert_msg(dpl_get_element_at_index(result,2) == 'C', "t3 Failure: expected list to have 'B' at pos 2");
+
+    dpl_free(&list);
 }
 END_TEST
 
 START_TEST(test_dpl_get_element_at_index)
 {
-    dplist_t *list = dpl_create();
+    // TODO : If 'list' is NULL, 0 is returned.
+    dplist_t *list = NULL;
+    ck_assert_msg(dpl_get_element_at_index(list,0) == 0, "t0 Failure: 'list' is NULL, expected 0");
+    // TODO : If the list is empty, 0 is returned.
+    list = dpl_create();
+    ck_assert_msg(dpl_get_element_at_index(list,0) == 0, "t1 Failure: 'list' is empty, expected 0");
+
     dpl_insert_at_index(list, 'B', 1);
     dpl_insert_at_index(list, 'C', 2);
     dplist_t *result = dpl_insert_at_index(list, 'A', 0);
-    ck_assert_msg(dpl_get_element_at_index(result,0) == 'A', "t0 Failure: expected list to have 'A' at pos 0");
-    ck_assert_msg(dpl_get_element_at_index(result,1) == 'B', "t0 Failure: expected list to have 'B' at pos 0");
+    ck_assert_msg(dpl_get_element_at_index(result,0) == 'A', "t2 Failure: expected list to have 'A' at pos 0");
+    ck_assert_msg(dpl_get_element_at_index(result,1) == 'B', "t3 Failure: expected list to have 'B' at pos 1");
 
     // If 'index' is 0 or negative, the element of the first list node is returned.
-    ck_assert_msg(dpl_get_element_at_index(result,-8) == 'A', "t1 Failure: expected to return first element for negative index");
+    ck_assert_msg(dpl_get_element_at_index(result,-8) == 'A', "t4 Failure: expected to return first element for negative index");
     // If 'index' is bigger than the number of elements in the list, the element of the last list node is returned.
-    ck_assert_msg(dpl_get_element_at_index(result,6) == 'C', "t2 Failure: expected to return last element for index out of bounds");
-    // TODO : If the list is empty, 0 is returned.
-    // TODO : If 'list' is NULL, 0 is returned.
+    ck_assert_msg(dpl_get_element_at_index(result,6) == 'C', "t5 Failure: expected to return last element for index out of bounds");
+
+    dpl_free(&list);
 }
 END_TEST
 
@@ -98,7 +125,6 @@ START_TEST(test_dpl_size)
                   dpl_size(result));
 
     dpl_free(&list);
-
 }
 END_TEST
 
@@ -129,7 +155,6 @@ START_TEST(test_dpl_get_index_of_element)
 
 
     dpl_free(&list);
-
 }
 END_TEST
 
@@ -209,6 +234,8 @@ START_TEST(test_dpl_remove_at_index)
 
     ck_assert_msg(dpl_size(result) == 2, "t6 Faliure: expeted size 2, got size %d",
                   dpl_size(result));
+
+    dpl_free(&list);
 }
 END_TEST
 

@@ -62,10 +62,27 @@ void debug_dpl_remove_at_index(){
 
 }
 
+void debug_dpl_free(){
+    // TODO : Test free with one element
+    dplist_t *list = NULL;
+    list = dpl_create();
+    dpl_insert_at_index(list, 'B', 1);
+    dpl_free(&list);
+
+    // TODO : Test free with multiple element
+    list = dpl_create();
+    dpl_insert_at_index(list, 'A', 0);
+    dpl_insert_at_index(list, 'D', 3);
+    dpl_insert_at_index(list, 'C', 2);
+    dpl_free(&list);
+
+}
+
 int main(void) {
 
-    debug_dpl_get_index_of_element;
-    debug_dpl_remove_at_index();
+    //debug_dpl_get_index_of_element;
+    //debug_dpl_remove_at_index();
+    debug_dpl_free();
 
     return 0;
 }

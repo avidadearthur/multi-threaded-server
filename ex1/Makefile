@@ -9,7 +9,7 @@ test : dplist.c dplist_test.c
 	@echo -e '*** Compiling for UNIT TEST ***'
 	@echo -e '*******************************'
 	mkdir -p build
-	gcc dplist.c dplist_test.c -o build/dplist_test $(FLAGS)
+	gcc -g dplist.c dplist_test.c -o build/dplist_test $(FLAGS)
 	@echo -e '\n*************************'
 	@echo -e '*** Running UNIT TEST ***'
 	@echo -e '*************************'

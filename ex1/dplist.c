@@ -58,16 +58,25 @@ dplist_t *dpl_create() {
 }
 
 void dpl_free(dplist_t **list) {
-    //TODO: Every list node of the list needs to be deleted. (free memory)
-    //TODO: The list itself also needs to be deleted. (free all memory)
-    //TODO: '*list' must be set to NULL.
 
     if(*list != NULL){
         if((*list)->head == NULL){
             free(*list);
             *list = NULL;
         }
+        else{
+            int size = dpl_size(*list);
+            while(size != 0){
+                dpl_remove_at_index(*list, size-1);
+                size = dpl_size(*list);
+            }
+            free(*list);
+            *list = NULL;
+        }
     }
+
+
+
     // use remove at index recursively
 }
 
@@ -154,8 +163,10 @@ dplist_t *dpl_remove_at_index(dplist_t *list, int index) {
 int dpl_size(dplist_t *list) {
     int count = 0;
     if (list == NULL) return -1;
+
     dplist_node_t *dummy;
     dummy = list->head;
+
     while(dummy != NULL){
         count++;
         dummy = dummy->next;
@@ -166,20 +177,26 @@ int dpl_size(dplist_t *list) {
 dplist_node_t *dpl_get_reference_at_index(dplist_t *list, int index) {
     int count;
     dplist_node_t *dummy;
+
     DPLIST_ERR_HANDLER(list == NULL, DPLIST_INVALID_ERROR);
     if (list->head == NULL) return NULL;
+
     for (dummy = list->head, count = 0; dummy->next != NULL; dummy = dummy->next, count++) {
         if (count >= index) return dummy;
     }
+
     return dummy;
 }
 
 element_t dpl_get_element_at_index(dplist_t *list, int index) {
-
     element_t element;
-    dplist_node_t *ref_at_index;
-    ref_at_index = dpl_get_reference_at_index(list, index);
-    element = ref_at_index->element;
+
+    if (list == NULL || list->head == NULL) return 0;
+    else{
+        dplist_node_t *ref_at_index;
+        ref_at_index = dpl_get_reference_at_index(list, index);
+        element = ref_at_index->element;
+    }
 
     return element;
 }
