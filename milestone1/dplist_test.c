@@ -71,6 +71,27 @@ START_TEST(test_ListFree)
     }
 END_TEST
 
+START_TEST(test_dpl_insert_at_index)
+{
+    // TODO: Test Insert at zero in null list
+    dplist_t *list = NULL;
+
+    my_element_t *element0 = (my_element_t *) malloc(sizeof(my_element_t)); // element pointer
+
+    char *name0;
+    asprintf(&name0,"%s","Arthur");
+
+    element0->id = 0;
+    element0->name = name0;
+
+    ck_assert_msg(dpl_insert_at_index(list, element0, 0, false) == NULL, "Failure: expected result to be NULL");
+
+    // TODO: Test insert at index 0
+    list = dpl_create(element_copy, element_free, element_compare);
+    ck_assert_msg(dpl_insert_at_index(list, element0, 0, true) == NULL, "Failure: expected result to be NULL");
+}
+END_TEST
+
 //START_TEST(test_nameOfYourTest)
 //  Add other testcases here...
 //END_TEST
@@ -85,6 +106,7 @@ int main(void) {
     tcase_add_checked_fixture(tc1_1, setup, teardown);
     tcase_add_test(tc1_1, test_ListFree);
     // Add other tests here...
+    tcase_add_test(tc1_1, test_dpl_insert_at_index);
 
     srunner_run_all(sr, CK_VERBOSE);
 
