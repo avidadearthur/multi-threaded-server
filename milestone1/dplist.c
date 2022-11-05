@@ -32,18 +32,6 @@
             assert(!(condition));                                       \
         } while(0)
 
-/*
- * !!!!! REMOVE AFTER TEST - START !!!!!
- */
-
-typedef struct {
-    int id;
-    char* name;
-} my_element_t;
-
-/*
- * !!!!! REMOVE AFTER TEST - END !!!!!
- */
 
 /*
  * The real definition of struct list / struct node
@@ -88,22 +76,21 @@ void dpl_free(dplist_t **list, bool free_element) {
 
 dplist_t *dpl_insert_at_index(dplist_t *list, void *element, int index, bool insert_copy) {
 
-    dplist_node_t *ref_at_index, *list_node;
-    my_element_t * new_element = (my_element_t  *) element;
     // If 'list' is NULL, NULL is returned
     if (list == NULL) return NULL;
 
-    // insert_copy if true use element_copy() to make a copy of 'element'
-    // and use the copy in the new list node
-    if (insert_copy){
-        new_element = list->element_copy(element);
-    }
-
-    element = new_element;
-
+    dplist_node_t *ref_at_index, *list_node;
     list_node = malloc(sizeof(dplist_node_t));
     DPLIST_ERR_HANDLER(list_node == NULL, DPLIST_MEMORY_ERROR);
-    list_node->element = element;
+
+    // insert_copy if true use element_copy() to make a copy of 'element'
+    // and use the copy in the new list node
+    if (insert_copy && element != NULL){
+        list_node->element = list->element_copy(element); // or (*list->element_copy)(element);
+    }
+    else{
+        list_node->element = element;
+    }
 
     // pointer drawing breakpoint
     if (list->head == NULL) { // covers case 1: If list doesn't have elements head point to first node
@@ -145,38 +132,108 @@ dplist_t *dpl_insert_at_index(dplist_t *list, void *element, int index, bool ins
 
 dplist_t *dpl_remove_at_index(dplist_t *list, int index, bool free_element) {
 
-    //TODO: add your code here
+    if (list == NULL) return NULL;
+
+    if (list->head == NULL) return list;
+
+    dplist_node_t *ref_del_at_index;
+    ref_del_at_index = dpl_get_reference_at_index(list, index);
+
+    dplist_node_t *prev_node = ref_del_at_index->prev;
+    dplist_node_t *next_node = ref_del_at_index->next;
+
+    // index == 0 (deleting the first node)
+    if (prev_node == NULL){
+        list->head = next_node;
+        // for when there's only one element left
+        if (next_node != NULL) next_node->prev = NULL;
+    }
+    else if (next_node == NULL){
+        prev_node->next = NULL;
+    }
+    else{
+        prev_node->next = next_node;
+        next_node->prev = prev_node;
+    }
+
+    if(free_element){
+        list->element_free(&ref_del_at_index->element);
+    }
+
+    free(ref_del_at_index);
+
+    return list;
 
 }
 
 int dpl_size(dplist_t *list) {
 
-    //TODO: add your code here
+    int count = 0;
+    if (list == NULL) return -1;
+
+    dplist_node_t *dummy;
+    dummy = list->head;
+
+    while(dummy != NULL){
+        count++;
+        dummy = dummy->next;
+    }
+    return count;
 
 }
 
 void *dpl_get_element_at_index(dplist_t *list, int index) {
 
-    //TODO: add your code here
-
+    dplist_node_t * ref_at_index = dpl_get_reference_at_index(list,index);
+    return dpl_get_element_at_reference(list, ref_at_index);
 }
 
 int dpl_get_index_of_element(dplist_t *list, void *element) {
 
-    //TODO: add your code here
+    dplist_node_t *current;
+    if (list == NULL || list->head == NULL) return -1;
+    current = list->head;
+    for(int i=0; i< dpl_size(list); i++){
+        void *element_at_index = dpl_get_element_at_index(list, i);
+        if(element_at_index == NULL) return -1;
+        // Use 'element_compare()' to search 'element' in the list, a match is found when 'element_compare()' returns 0
+        else if(list->element_compare(element,element_at_index) == 0) return i;
+        current = current->next;
+    }
+    return -1;
 
 }
 
 dplist_node_t *dpl_get_reference_at_index(dplist_t *list, int index) {
 
-    //TODO: add your code here
+    int count;
+    dplist_node_t *dummy;
+
+    if (list == NULL || list->head == NULL) return NULL;
+    DPLIST_ERR_HANDLER(list == NULL, DPLIST_INVALID_ERROR);
+
+    for (dummy = list->head, count = 0; dummy->next != NULL; dummy = dummy->next, count++) {
+        if (count >= index) return dummy;
+    }
+
+    return dummy;
 
 }
 
 void *dpl_get_element_at_reference(dplist_t *list, dplist_node_t *reference) {
-
-    //TODO: add your code here
-
+    if (list == NULL || list->head == NULL) return NULL;
+    else{
+        // If 'reference' is not an existing reference in the list, NULL is returned.
+        dplist_node_t *current;
+        current = list->head;
+        for(int i=0; i< dpl_size(list); i++){
+            if(current == reference){
+                return reference->element;
+            }
+            current = current->next;
+        }
+    }
+    return NULL;
 }
 
 
