@@ -32,11 +32,18 @@
             assert(!(condition));                                       \
         } while(0)
 
-// !!!!!!!!!BAD PRACTICE for debugging
+/*
+ * !!!!! REMOVE AFTER TEST - START !!!!!
+ */
+
 typedef struct {
     int id;
     char* name;
 } my_element_t;
+
+/*
+ * !!!!! REMOVE AFTER TEST - END !!!!!
+ */
 
 /*
  * The real definition of struct list / struct node
