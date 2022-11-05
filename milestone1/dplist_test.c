@@ -11,6 +11,7 @@ typedef struct {
     char* name;
 } my_element_t;
 
+
 void* element_copy(void * element);
 void element_free(void ** element);
 int element_compare(void * x, void * y);
@@ -88,7 +89,19 @@ START_TEST(test_dpl_insert_at_index)
 
     // TODO: Test insert at index 0
     list = dpl_create(element_copy, element_free, element_compare);
-    ck_assert_msg(dpl_insert_at_index(list, element0, 0, true) == NULL, "Failure: expected result to be NULL");
+    dpl_insert_at_index(list, element0, 0, true);
+
+    // TODO: Iplement dpl_size to test if element is there
+}
+END_TEST
+
+START_TEST(test_dpl_size)
+{
+    // TODO: Test get size of null list
+
+    // TODO: Test get size of empty list
+
+    // TODO: Test get size of on element list
 }
 END_TEST
 
