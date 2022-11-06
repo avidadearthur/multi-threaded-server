@@ -91,9 +91,27 @@ START_TEST(test_ListFree)
         ck_assert_msg(list == NULL, "Failure: expected result to be NULL");
 
         // TODO : Test free with one element, also test if inserted elements are set to NULL
+        // TODO: Element creation
+        TEST_ELEMENTS
+        //   0      1      2    3
+        // Paula Arthur Marie Davide
+        // TODO: populate list with elements (not deep copies)
+        list = dpl_create(element_copy, element_free, element_compare);
+        dpl_insert_at_index(list, element0, 0, false); // Arthur
+        dpl_free(&list, true);
+        ck_assert_msg(list == NULL, "Failure: expected result to be NULL");
+        //ck_assert_msg(element0 == NULL, "Failure: expected result to be NULL");
 
         // TODO : Test free with multiple element, also test if inserted elements are set to NULL
-
+        list = dpl_create(element_copy, element_free, element_compare);
+        dpl_insert_at_index(list, element1, 0, false); // Marie
+        dpl_insert_at_index(list, element2, 1, false); // Marie Paula
+        dpl_insert_at_index(list, element3, 2, false); // Marie Paula Davide
+        dpl_free(&list, true);
+        //ck_assert_msg(list == NULL, "Failure: expected result to be NULL");
+        //ck_assert_msg(element0 == NULL, "Failure: expected result to be NULL");
+        //ck_assert_msg(element1 == NULL, "Failure: expected result to be NULL");
+        //ck_assert_msg(element2 == NULL, "Failure: expected result to be NULL");
     }
 END_TEST
 
@@ -127,7 +145,12 @@ START_TEST(test_dpl_insert_at_index) // tests get_element_at_index indirectely
     result = element_compare(dpl_get_element_at_index(list, 99), element3);
     ck_assert_msg(result == 0, "t1: Failure: expected result to be 0");
 
-
+    // TODO: Free elements
+    dpl_free(&list, true);
+    free(element0);
+    free(element1);
+    free(element2);
+    free(element3);
 }
 END_TEST
 
@@ -160,6 +183,12 @@ START_TEST(test_dpl_size) // tests insert_at_index indirectely
     dpl_insert_at_index(list, element3, 99, true); // Paula Arthur Marie Davide
     ck_assert_msg(dpl_size(list) == 4, "t5: Failure: expected result to be 4");
 
+    // TODO: Free elements
+    dpl_free(&list, true);
+    free(element0);
+    free(element1);
+    free(element2);
+    free(element3);
 
 }
 END_TEST
@@ -198,6 +227,12 @@ START_TEST(test_dpl_get_reference_at_index) // tests get_element_at_ref and
     dplist_node_t * ref_at3 = dpl_get_reference_at_index(list,99);
     ck_assert_msg(dpl_get_element_at_reference(list, ref_at3) == element3, "t5: Failure: expected result to be element3");
 
+    // TODO: Free elements
+    free(element0);
+    free(element1);
+    free(element2);
+    free(element3);
+
 }
 END_TEST
 
@@ -230,6 +265,12 @@ START_TEST(test_dpl_get_element_at_reference) // tests dpl_get_reference_at_inde
     dpl_insert_at_index(list_A, element3, 1, false); // Arthur Davide (deep copy)
     dplist_node_t * ref_at1_A = dpl_get_reference_at_index(list_A,1);
     ck_assert_msg(dpl_get_element_at_reference(list_A,ref_at1_A) == element3, "t3: Failure: expected result to be  element3");
+
+    // TODO: Free elements
+    free(element0);
+    free(element1);
+    free(element2);
+    free(element3);
 
 }
 END_TEST
@@ -277,6 +318,11 @@ START_TEST(test_dpl_get_index_of_element) // tests dpl_insert_at_index indirecte
     ck_assert_msg(dpl_get_index_of_element(list, element2) == 0, "t16: Failure: expected result to be 0");
     ck_assert_msg(dpl_get_index_of_element(list, element3) == 3, "t17: Failure: expected result to be 3");
 
+    // TODO: Free elements
+    free(element0);
+    free(element1);
+    free(element2);
+    free(element3);
 
 }
 END_TEST
@@ -342,8 +388,10 @@ START_TEST(test_dpl_remove_at_index) // tests  indirectely
     dpl_remove_at_index(list, -1, true); // Marie Davide --- & element2 != NULL, element0 != NULL
     // Test remove_at_index, element at index  99
     dpl_remove_at_index(list, 99, true); // Marie --- & element2 != NULL, element0 != NULL , element3 != NULL
-    dpl_remove_at_index(list, 0, false);
-
+    dpl_remove_at_index(list, 0, true);
+    // Couldn't come up with a test to show that the element where freed but I could see they were
+    // by debugging.
+    dpl_free(&list, true);
 }
 END_TEST
 

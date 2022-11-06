@@ -70,8 +70,18 @@ dplist_t *dpl_create(// callback functions
 
 void dpl_free(dplist_t **list, bool free_element) {
 
-    //TODO: add your code here
-
+    if(*list != NULL){
+        if((*list)->head != NULL){
+            int size = dpl_size(*list);
+            while(size != 0){
+                dpl_remove_at_index(*list, size-1, free_element);
+                size = dpl_size(*list);
+            }
+            free((*list)->head);
+            free(*list);
+        }
+        *list = NULL;
+    }
 }
 
 dplist_t *dpl_insert_at_index(dplist_t *list, void *element, int index, bool insert_copy) {
@@ -142,6 +152,11 @@ dplist_t *dpl_remove_at_index(dplist_t *list, int index, bool free_element) {
     dplist_node_t *prev_node = ref_del_at_index->prev;
     dplist_node_t *next_node = ref_del_at_index->next;
 
+    if(free_element && ref_del_at_index->element != NULL){
+        list->element_free(&ref_del_at_index->element);
+    }
+
+
     // index == 0 (deleting the first node)
     if (prev_node == NULL){
         list->head = next_node;
@@ -156,9 +171,6 @@ dplist_t *dpl_remove_at_index(dplist_t *list, int index, bool free_element) {
         next_node->prev = prev_node;
     }
 
-    if(free_element){
-        list->element_free(&ref_del_at_index->element);
-    }
 
     free(ref_del_at_index);
 
