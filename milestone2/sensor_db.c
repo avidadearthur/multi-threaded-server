@@ -45,8 +45,8 @@ int close_db(FILE * f){
   *    TODO: 3 - The csv file has been closed.
   *    TODO: -3 - An error occurred when closing the csv file.
   **/
-int insert_log(FILE * f, int log_event, char *ts){
-    printf("print from insert_log ts is: %s \n", ts);
+int insert_log(FILE * f, int log_event){
+
     printf("print from insert_log FILE f is: %p \n", &f);
     printf("print from insert_log int log_event is: %d \n", log_event);
 
@@ -71,6 +71,14 @@ int insert_log(FILE * f, int log_event, char *ts){
     if(log_event == -3) log_event_message = "An error occurred when closing the csv file.";
 
     printf("print from insert_log log message is: %s \n", log_event_message);
+
+    // <timestamp>
+    // num of sec since 01/01/70
+    time_t t = time(NULL);
+    struct tm *tm = localtime(&t);
+    char ts[64];
+    strftime(ts, sizeof(ts), "%F %T", tm);
+    printf("print from insert_log ts is: %s \n", ts);
 
     // combine <sequence number> <timestamp> <log-event info message>
     fprintf(f,"%d, %s, %s\n", count, ts, log_event_message);

@@ -60,4 +60,4 @@ int close_db(FILE * f);
  * \param log_event : int corresponding to the type of event
  * \return error code
  */
-int insert_log(FILE * f, int log_event, char *ts);
+int insert_log(FILE * f, int log_event);

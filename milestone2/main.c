@@ -70,16 +70,54 @@ int main(void){
             wlog_event = 1; // A new csv file is created or an existing file has been opened.
         }
 
-
+        // --------------------DB Open Event----------------------------//
         write(fd[WRITE_END], &wlog_event, sizeof(wlog_event));
 
-        int err =  close_db(db);
+        int err = insert_sensor(db,2,11.11,time ( NULL ));
+
+        if(err == 0){
+            wlog_event = 2; // Data insertion succeeded.
+        }
+        else if(err == -1){
+            wlog_event = -2; // An error occurred when writing to the csv file.
+        }
+
+        // --------------------Insert Sensor 1 Event--------------------//
+        write(fd[WRITE_END], &wlog_event, sizeof(wlog_event));
+
+        err = insert_sensor(NULL,3,15.13,time ( NULL ));
+
+        if(err == 0){
+            wlog_event = 2; // Data insertion succeeded.
+        }
+        else if(err == -1){
+            wlog_event = -2; // An error occurred when writing to the csv file.
+        }
+
+        // --------------------Fail Insert Sensor 3 Event---------------//
+        write(fd[WRITE_END], &wlog_event, sizeof(wlog_event));
+
+        err = insert_sensor(db,3,15.13,time ( NULL ));
+
+        if(err == 0){
+            wlog_event = 2; // Data insertion succeeded.
+        }
+        else if(err == -1){
+            wlog_event = -2; // An error occurred when writing to the csv file.
+        }
+
+        // --------------------Insert Sensor 3 Event--------------------//
+        write(fd[WRITE_END], &wlog_event, sizeof(wlog_event));
+
+
+        err =  close_db(db);
         if(err == 0){
             wlog_event = 3; // The csv file has been closed.
         }
         else if(err == -1){
-            wlog_event = -1; // The csv file has been closed.
+            wlog_event = -3; // An error occurred when closing the csv file.
         }
+        // --------------------Close Open Event----------------------------//
         write(fd[WRITE_END], &wlog_event, sizeof(wlog_event));
 
         close(fd[WRITE_END]);
@@ -105,19 +143,14 @@ int main(void){
 
         // handle log event
         FILE * log;
-        log = fopen("gateway.log", "w+");
+        log = fopen("gateway.log", "a");
 
         // read until eof
         while (read(fd[READ_END], &rlog_event, sizeof(rlog_event)) > 0) {
-            // <timestamp>
-            // num of sec since 01/01/70
-            time_t t = time(NULL);
-            struct tm *tm = localtime(&t);
-            char ts[64];
-            size_t ret = strftime(ts, sizeof(ts), "%F %T", tm);
-            assert(ret);
+
             printf("Child reads %d \n", rlog_event);
-            insert_log(log, rlog_event, ts);
+            insert_log(log, rlog_event);
+
         }
 
 
