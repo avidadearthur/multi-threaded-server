@@ -1,6 +1,6 @@
-all:main.c sensor_db.c
+all:main.c sensor_db.c logger.c
 	mkdir -p build
-	gcc -g -Wall -Werror -o build/main main.c sensor_db.c
+	gcc -g -Wall -Werror -o build/main main.c sensor_db.c logger.c
 
 clean:
 	rm -r build

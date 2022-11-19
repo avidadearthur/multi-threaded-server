@@ -43,21 +43,3 @@ int insert_sensor(FILE * f, sensor_id_t id, sensor_value_t value, sensor_ts_t ts
  * \return error code
  */
 int close_db(FILE * f);
-
-
-/**
- * Operation to update the log file. Each line of the log file is structured
- * as follows:  <sequence number> <timestamp> <log-event info message>
- * A log-event contains an ASCII info message describing the type of event.
- *
- * A few examples of log-events are:
- *     0 - A new csv file is created or an existing file has been opened.
- *     1 - Data insertion succeeded.
- *     2 - An error occurred when writing to the csv file.
- *     3 - The csv file has been closed.
- *
- * \param f : FILE pointer
- * \param log_event : int corresponding to the type of event
- * \return error code
- */
-int insert_log(FILE * f, int log_event);
