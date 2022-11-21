@@ -13,117 +13,74 @@
 
 // global vars
 pid_t pid;
-static int fd[2];
+int fd[2];
+sem_t * sem; // We want a semaphore in shared memory using a pointer instead
 
-FILE * open_db(char * filename, bool append){
+
+FILE * open_db(char * filename, bool append){ // parent process
+    // spawns the logger process (child)
+    spawn_logger();
     char *log_event_message;
 
-    // create the pipe
-    if (pipe(fd) == -1){
-        printf("Pipe failed\n");
-        return NULL;
-    }
-    // fork the child
-    pid = fork();
-    // the parent process will have the pid of the child but the child process
-    // will not  be aware of that pid, so it only enters the else clause
-
-    if (pid < 0){ // fork error
-        printf("fork failed\n");
-        return NULL;
-    }
-    if (pid > 0) { // parent process
-        close(fd[READ_END]); // do just once!!
-        FILE *db;
-        if (append) {
-            db = fopen(filename, "a");
-            log_event_message = "A new csv file is created or an existing file has been opened.";
-
-            // --------------------DB Open Event-----------------//
-            int n = strlen(log_event_message) + 1;
-            write(fd[WRITE_END], &n, sizeof(int));
-            write(fd[WRITE_END], &log_event_message, sizeof(char) * n);
-
-        } else {
-            db = fopen(filename, "w+");
-        }
-        if (!db){
-            log_event_message = "An error occurred when opening the csv file.";
-
-            // ------------------DB Open fail Event-----------------//
-            int n = strlen(log_event_message) + 1;
-            write(fd[WRITE_END], &n, sizeof(int));
-            write(fd[WRITE_END], &log_event_message, sizeof(char) * n);
-
-        }
-        sleep(0.01); // let parent process wait until parent finishes
-        return db;
+    FILE *db;
+    if (append) {
+        db = fopen(filename, "a");
+        log_event_message = "A new csv file is created or an existing file has been opened.";
+        // --------------------DB Open Event-----------------//
+        write(fd[WRITE_END], log_event_message, strlen(log_event_message)+1);
+    } else {
+        db = fopen(filename, "w+");
+        log_event_message = "A new csv file is created or an existing file has been opened.";
+        // --------------------DB Open Event-----------------//
+        write(fd[WRITE_END], log_event_message, strlen(log_event_message)+1);
     }
 
-    // Spawn child and keep it in a loop
-    logger(fd);
-    exit(0);
+    return db;
 }
 
-int insert_sensor(FILE * f, sensor_id_t id, sensor_value_t value, sensor_ts_t ts){
-    if (pid > 0) { // parent process
-        char *log_event_message;
-        if (!f){
-            log_event_message = "An error occurred when writing to the csv file.";
-            // --------------------Fail Insert Sensor Event---------------//
-            int n = strlen(log_event_message) + 1;
-            write(fd[WRITE_END], &n, sizeof(int));
-            write(fd[WRITE_END], &log_event_message, sizeof(char) * n);
+int insert_sensor(FILE * db, sensor_id_t id, sensor_value_t value, sensor_ts_t ts){ // parent process
 
-            return -1;
-        }
-        struct tm *tsm = gmtime(&ts);
-        char timestamp[256];
-        strftime(timestamp, sizeof(timestamp), "%F %T", tsm);
-        fprintf(f, "%d, %f, %s\n", id, value, timestamp);
-        fflush(f);
+    char *log_event_message;
+    if (!db) {
+        //printf("sensor_db.c: !f FILE log is : %p \n", db);
+        log_event_message = "An error occurred when writing to the csv file.";
+        // --------------------Fail Insert Sensor Event---------------//
+        write(fd[WRITE_END], log_event_message, strlen(log_event_message)+1);
 
-        log_event_message = "Data insertion succeeded.";
-        // --------------------Insert Sensor Event---------------//
-        int n = strlen(log_event_message) + 1;
-        write(fd[WRITE_END], &n, sizeof(int));
-        write(fd[WRITE_END], &log_event_message, sizeof(char) * n);
-
-        //sleep(0.01); // let parent process wait until parent finishes
-        return 0;
+        return -1;
     }
+    //printf("sensor_db.c: FILE log is: %p \n", &db);
 
-    return -1;
+    struct tm *tsm = gmtime(&ts);
+    char timestamp[256];
+    strftime(timestamp, sizeof(timestamp), "%F %T", tsm);
+    fprintf(db, "%d, %f, %s\n", id, value, timestamp);
+    fflush(db);
+
+    log_event_message = "Data insertion succeeded.";
+    // --------------------Insert Sensor Event---------------//
+    write(fd[WRITE_END], log_event_message, strlen(log_event_message)+1);
+
+    return 0;
+
 }
 
-int close_db(FILE * f){
-    if (pid > 0) { // parent process
+int close_db(FILE * f){ // parent process
 
-        char *log_event_message;
-        if (!f){
-            log_event_message = "An error occurred when closing the csv file.";
+    char *log_event_message;
+    if (!f) {
+        log_event_message = "An error occurred when closing the csv file.";
+        // ------------------DB Close fail Event-----------------//
+        write(fd[WRITE_END], log_event_message, strlen(log_event_message)+1);
 
-            // ------------------DB Close fail Event-----------------//
-            int n = strlen(log_event_message) + 1;
-            write(fd[WRITE_END], &n, sizeof(int));
-            write(fd[WRITE_END], &log_event_message, sizeof(char) * n);
-
-            return -1;
-        }
-
-        fclose(f);
-
-        log_event_message = "The csv file has been closed.";
-
-        // ------------------DB Close Event-----------------//
-        int n = strlen(log_event_message) + 1;
-        write(fd[WRITE_END], &n, sizeof(int));
-        write(fd[WRITE_END], &log_event_message, sizeof(char) * n);
-
-        close(fd[WRITE_END]); // child dies
-
-        sleep(0.01); // let parent process wait until parent finishes
-        return 0;
+        return -1;
     }
-    return -1;
+    fclose(f);
+
+    log_event_message = "The csv file has been closed.";
+    // ------------------DB Close Event-----------------//
+    write(fd[WRITE_END], log_event_message, strlen(log_event_message)+1);
+    kill_logger();
+
+    return 0;
 }

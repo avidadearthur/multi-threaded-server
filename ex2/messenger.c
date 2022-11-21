@@ -6,65 +6,71 @@
 #include <unistd.h>
 #include <string.h>
 #include <sys/wait.h>
-#include <stdlib.h>
-#include <ctype.h>
+#include <semaphore.h>
+#include <unistd.h>
+#include <sys/mman.h>
 #include "messenger.h"
+#include "receiver.h"
+
 
 #define READ_END 0
 #define WRITE_END 1
 
 // global vars
-extern pid_t pid;
-extern int fd[2];
+pid_t pid;
+int fd[2];
+sem_t * sem; // We want a semaphore in shared memory using a pointer instead
 
-int send_message(char message[]){
-    int status;
-
-    // create the pipe
-    if (pipe(fd) == -1){
-        printf("Pipe failed\n");
-        return 1;
+// creates child process that runs the receiver.c
+int spawn_logger() {
+    if (pipe(fd) == -1) {
+        printf("messenger.c: Pipe failed\n");
+        return -1;
     }
+
+    // from: https://stackoverflow.com/questions/5290985/what-happens-when-a-process-enters-a-semaphore-critical-section-and-sleeps
+    // Put semaphore in shared memory so that it can be accessed by child process
+    sem = mmap(0, sizeof(sem_t), PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
+    sem_init(sem,1,0);
+
     // fork the child
     pid = fork();
     // the parent process will have the pid of the child but the child process
     // will not  be aware of that pid, so it only enters the else clause
 
-    if (pid < 0){ // fork error
-        printf("fork failed\n");
-        return 2;
+
+    if (pid < 0) { // fork error
+        printf("messenger.c: fork failed");
+        return -1;
     }
-    if (pid > 0){ // parent process
-        close(fd[READ_END]);
-
-        printf("Parent says %s\n", message);
-
-        int n = strlen(message) + 1;
-        if (write(fd[WRITE_END], &n, sizeof(int)) < 0) {
-            return 3;
-        }
-        printf("Sent n = %d\n", n);
-
-        if (write(fd[WRITE_END], &message, sizeof(char) * n) < 0) {
-            return 4;
-        }
-
-        close(fd[WRITE_END]);
-
-        //Parent waits process pid (child)
-        waitpid(pid, &status, 0);
-        //Option is 0 since I check it later
-
-        if (WIFSIGNALED(status)){
-            printf("Error\n");
-        }
-        else if (WEXITSTATUS(status)){
-            printf("Exited Normally\n");
-        }
-        //To Here and see the difference
-        printf("Parent process id: %d\n", getpid());
-        printf("pid seen from Parent process: %d\n", pid);
+    if (pid > 0) { // parent process
+        //  will write to the pipe
+        close(fd[READ_END]); // do just once!!
+        // go back to main
+        return 0;
     }
+    // child process
+    // spawn the receiver process
+    log_message();
+    // the receiver process will never reach this point
+    return 0;
+}
 
+int send_message(char message[]){
+    // do something with the message
+    // e.g. write in a file
+    printf("messenger.c: Message by parent sent: %s \n", message);
+
+    //write pointer to string to the pipe
+    write(fd[WRITE_END], message, strlen(message)+1);
+
+    return 0;
+}
+
+int kill_child(){
+    // wait till semaphore is available
+    close(fd[WRITE_END]);
+    sem_wait(sem);
+    kill(pid, SIGKILL);
     return 0;
 }

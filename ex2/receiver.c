@@ -4,10 +4,8 @@
 
 #include <stdio.h>
 #include<unistd.h>
-#include <string.h>
-#include <sys/wait.h>
 #include <stdlib.h>
-#include <ctype.h>
+#include <string.h>
 #include "messenger.h"
 
 #define READ_END 0
@@ -19,39 +17,22 @@ extern int fd[2];
 
 
 int receive_message(){
-    if (pid <= 0){ // child process
-        close(fd[WRITE_END]);
+    //child process
+    // will read from the pipe every time the parent process writes to it
+    close(fd[WRITE_END]);
 
-        int n;
-        char *str;
+    // read string from the pipe
+    int n;
+    char *message;
 
-        if (read(fd[READ_END], &n, sizeof(int)) < 0) {
-            return 5;
-        }
-        printf("Received n = %d\n", n);
-        if (read(fd[READ_END], &str, sizeof(int) * n) < 0) {
-            return 6;
-        }
-        printf("Received string %s\n", str);
-
-        // set to uppercase
-        char new_rmsg[sizeof(int) * n];
-        int i = 0;
-
-        // Loop
-        while (str[i]) {
-            new_rmsg[i] = toupper(str[i]);
-            i++;
-        }
-
-        printf("Child reads %s \n", new_rmsg);
-
-        close(fd[READ_END]);
-
-        // pid will always be 0 in te child process
-        printf("Child process id: %d\n", getpid());
-        printf("pid seen from Child process: %d\n", pid);
-        exit(EXIT_SUCCESS);
+    // read messages until parent process there is no more messages
+    while (read(fd[READ_END], &n, sizeof(int)) > 0) {
+        message = malloc(sizeof(char) * n);
+        read(fd[READ_END], &message, sizeof(char) * n);
+        printf("receiver.c: Message by child received: %s \n", message);
+        free(message);
     }
-    return 0;
+
+    close(fd[READ_END]);
+    exit(0);
 }

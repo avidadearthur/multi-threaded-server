@@ -4,6 +4,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <unistd.h>
 #include "sensor_db.h"
 
 #define READ_END 0
@@ -19,15 +20,22 @@
 int main(void){
     // start writing to sensor db process
     FILE * db;
-    db = open_db("sensor_db.txt", true); // A new csv file is created or an existing file has been opened.
-    insert_sensor(db,3,15.13,time ( NULL ));
-    close_db(db); // The csv file has been closed.
     db = NULL;
-    db = open_db("sensor_db.txt", true); // A new csv file is created or an existing file has been opened.
     insert_sensor(db,3,15.13,time ( NULL ));
-    insert_sensor(db,1,11.13,time ( NULL ));
-    insert_sensor(db,1,11.13,time ( NULL ));
+    db = open_db("sensor_db.txt", true); // A new csv file is created or an existing file has been opened.
+    insert_sensor(db,3,15.13,time ( NULL )); // Data insertion succeeded.
     close_db(db); // The csv file has been closed.
+
+    db = NULL;
+    insert_sensor(db,3,15.13,time ( NULL )); // An error occurred when writing to the csv file.
+    db = open_db("sensor_db.txt", true); // A new csv file is created or an existing file has been opened.
+    insert_sensor(db,3,15.13,time ( NULL )); // Data insertion succeeded.
+    sleep(1);
+    insert_sensor(db,1,11.13,time ( NULL )); // Data insertion succeeded.
+    sleep(1);
+    insert_sensor(db,1,11.13,time ( NULL )); // Data insertion succeeded.
+    close_db(db); // The csv file has been closed.
+
 
     return 0;
 }
