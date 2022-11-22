@@ -10,7 +10,6 @@
 #include <unistd.h>
 #include <sys/mman.h>
 #include "sensor_db.h"
-#include <semaphore.h>
 
 
 
@@ -39,8 +38,3 @@ int spawn_logger();
  *
  */
 int log_message();
-
-/**
- * Kill child process
- */
-int kill_logger();
