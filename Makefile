@@ -10,10 +10,13 @@ runserver: test_server
 	./test_server
 
 runclient1: sensor_node
-	./sensor_node 1 2 127.0.0.1 5678
+	./sensor_node 1 2 127.0.0.1 $(port)
 
 runclient2: sensor_node
-	./sensor_node 2 5 127.0.0.1 5678
+	./sensor_node 2 5 127.0.0.1 $(port)
+
+zip:
+	zip plab3.zip *.c *.h
 
 clean:
 	rm -r build

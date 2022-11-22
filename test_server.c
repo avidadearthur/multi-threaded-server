@@ -37,18 +37,18 @@ int main(int argc, char *argv[]) {
         // convert argv[1] to integer with strtol
         port_number = strtol(argv[1], NULL, 10);
         if (port_number == 0) {
-            fprintf(stderr, "Invalid port number");
+            fprintf(stderr, "Invalid port number \n");
+            fprintf(stderr, "Usage: %s port (default port is %d)\n", argv[0], PORT);
             exit(EXIT_FAILURE);
         }
     }
 
-    printf("Test server is started\n");
+    printf("Test server is started at port %d \n", port_number);
     if (tcp_passive_open(&server, port_number) != TCP_NO_ERROR) exit(EXIT_FAILURE);
     do {
         if (tcp_wait_for_connection(server, &client) != TCP_NO_ERROR) exit(EXIT_FAILURE);
         printf("Incoming client connection\n");
         conn_counter++;
-
 
         pthread_create(&tid, NULL,  runner, client);
 
