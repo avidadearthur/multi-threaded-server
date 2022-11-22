@@ -3,6 +3,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <signal.h>
+#include <sys/wait.h>
 #include "logger.h"
 #include "sensor_db.h"
 
@@ -17,15 +18,16 @@ extern sem_t * sem;
 
 
 int spawn_logger() { // spawns the logger process (child) that runs the logger.c
+
+    // from: https://stackoverflow.com/questions/5290985/what-happens-when-a-process-enters-a-semaphore-critical-section-and-sleeps
+    // Put semaphore in shared memory so that it can be accessed by child process
+    // sem = mmap(0, sizeof(sem_t), PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
+    // sem_init(sem,1,0); // init semaphore such that wait(sem) will block parent process
+
     if (pipe(fd) == -1) {
         printf("messenger.c: Pipe failed\n");
         return -1;
     }
-
-    // from: https://stackoverflow.com/questions/5290985/what-happens-when-a-process-enters-a-semaphore-critical-section-and-sleeps
-    // Put semaphore in shared memory so that it can be accessed by child process
-    sem = mmap(0, sizeof(sem_t), PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
-    sem_init(sem,1,0); // init semaphore such that wait(sem) will block parent process
 
     // fork the child
     pid = fork();
@@ -51,73 +53,50 @@ int spawn_logger() { // spawns the logger process (child) that runs the logger.c
 
 int log_message(){ //child process
 
+    //child process
     close(fd[WRITE_END]);
-    int bytesread;
-    // char log_message[BUFSIZ];
     char buffer[BUFSIZ];
-
+    char message[BUFSIZ];
+    //char *message;
     int count;
     char ts[64];
 
     FILE * log;
     log = fopen("gateway.log", "a");
-    if(log) printf("logger.c: FILE log is: %p \n", &log);
-    if(!log) return 7;
 
-    // from: https://stackoverflow.com/questions/5290985/what-happens-when-a-process-enters-a-semaphore-critical-section-and-sleeps
-    // Loop while not end of file or not a read error
-    while ((bytesread = read( fd[READ_END], buffer, BUFSIZ)) != 0){
-
-        if ( bytesread > 0 ) { // more data
-            printf("logger.c: Entered bytesread > 0 \n");
-            // concatenate '\0' at the beginning of the buffer
-            char * message = malloc(bytesread + 1);
-            message[0] = '\0';
-
-            // parse buffer for '\0'
-            message = strtok(buffer, "\0");
-            printf("logger.c: Child received the word: '%s'\n", message);
-            // <sequence number> // solve later
-            count = 0;
-            // <timestamp> // num of sec since 01/01/70
-            time_t t = time(NULL);
-            struct tm *tm = localtime(&t);
-            strftime(ts, sizeof(ts), "%F %T", tm);
-            // combine <sequence number> <timestamp> <log-event info log_message>
-            printf("logger.c: full log message: %d, %s, %s\n", count, ts, message);
-            fprintf(log,"%d, %s, %s\n", count, ts, message);
-
-
-            do{
-                message = strchr(message,0) + 1;
-                printf("logger.c: Child received the word: '%s'\n", message);
-                // <sequence number> // solve later
-                count = 0;
-                // <timestamp> // num of sec since 01/01/70
-                time_t t = time(NULL);
-                struct tm *tm = localtime(&t);
-                strftime(ts, sizeof(ts), "%F %T", tm);
-                // combine <sequence number> <timestamp> <log-event info log_message>
-                printf("logger.c: full log message: %d, %s, %s\n", count, ts, message);
-                fprintf(log,"%d, %s, %s\n", count, ts, message);
+    // read is looping over every byte in the pipe
+    // and is a blocking call until there's something to read
+    // or the pipe is closed
+    // sleep(1); to test that the parsing works
+    while(read( fd[READ_END], buffer, BUFSIZ) > 0 ) {
+        int j = 0;
+        memset(message, ' ', BUFSIZ); // make sure its empty
+        // look for null terminator in buffer
+        for(int i= 0; i < BUFSIZ; i++){
+            // copy every byte until the null terminator
+            message[i-j] = buffer[i];
+            if(buffer[i] == '\0'){
+                if(message[0] != '\0'){
+                    // <sequence number> // solve later
+                    count = 0;
+                    // <timestamp> // num of sec since 01/01/70
+                    time_t t = time(NULL);
+                    struct tm *tm = localtime(&t);
+                    strftime(ts, sizeof(ts), "%F %T", tm);
+                    // combine <sequence number> <timestamp> <log-event info log_message>
+                    printf("logger.c: full log message: %d, %s, %s\n", count, ts, message);
+                    fprintf(log,"%d, %s, %s\n", count, ts, message);
+                }
+                buffer[i] = ' ';
+                // reset j such that i - j is 0 for the next char of the buffer
+                j = i + 1;
             }
-            while (strcmp(message,"\0") > 0);
         }
-        else { //read error
-            perror("logger.c: read()");
-            exit(4);
-        }
+        memset(message, ' ', BUFSIZ); // clear message
     }
-    sem_post(sem);
     fclose(log); // for now, we'll open and close the log file every time
     close(fd[READ_END]);
-    exit(0);
-}
-
-int kill_logger(){
-    close(fd[WRITE_END]);
-    sem_wait(sem);
-    kill(pid, SIGKILL);
+    kill(getpid(), SIGSEGV);
 
     return 0;
 }

@@ -45,6 +45,9 @@ int insert_sensor(FILE * db, sensor_id_t id, sensor_value_t value, sensor_ts_t t
         //printf("sensor_db.c: !f FILE log is : %p \n", db);
         log_event_message = "An error occurred when writing to the csv file.";
         // --------------------Fail Insert Sensor Event---------------//
+        // trying to insert the sensor before the file is created
+        // will not log anything, there's no child
+        // but it will work if you have other files open - solve later
         write(fd[WRITE_END], log_event_message, strlen(log_event_message)+1);
 
         return -1;
@@ -55,7 +58,6 @@ int insert_sensor(FILE * db, sensor_id_t id, sensor_value_t value, sensor_ts_t t
     char timestamp[256];
     strftime(timestamp, sizeof(timestamp), "%F %T", tsm);
     fprintf(db, "%d, %f, %s\n", id, value, timestamp);
-    fflush(db);
 
     log_event_message = "Data insertion succeeded.";
     // --------------------Insert Sensor Event---------------//
@@ -80,7 +82,9 @@ int close_db(FILE * f){ // parent process
     log_event_message = "The csv file has been closed.";
     // ------------------DB Close Event-----------------//
     write(fd[WRITE_END], log_event_message, strlen(log_event_message)+1);
-    kill_logger();
+
+    close(fd[WRITE_END]);
+    wait(NULL); // wait for the child to finish
 
     return 0;
 }
