@@ -6,12 +6,9 @@
 #include <stdlib.h>
 #include "config.h"
 #include <stdbool.h>
-#include <semaphore.h>
 #include <unistd.h>
 #include <sys/mman.h>
 #include "sensor_db.h"
-
-
 
 /**
  * Spawn a child process that will run the logger function in milestone.

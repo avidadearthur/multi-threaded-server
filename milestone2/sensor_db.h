@@ -6,7 +6,6 @@
 #include <stdlib.h>
 #include "config.h"
 #include <stdbool.h>
-#include <semaphore.h>
 
 /**
  * Operation to open a text file with a given name, and providing an indication

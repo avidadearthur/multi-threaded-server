@@ -39,9 +39,25 @@ int main(void){
     insert_sensor(db,3,15.13,time ( NULL )); // Data insertion succeeded.
     sleep(1); // test different input speeds
     insert_sensor(db,1,16.13,time ( NULL )); // Data insertion succeeded.
+
+/*
+ * I haven't figured how to handle the case when a new sensor db is opened.
+    FILE * db2;
+    // test opening another db file
+    db2 = open_db("sensor_db2.txt", true); // A new csv file is created or an existing file has been opened.
+    insert_sensor(db2,33,2.13,time ( NULL )); // Data insertion succeeded.
+    sleep(1); // test different input speeds
+    insert_sensor(db2,33,2.13,time ( NULL )); // Data insertion succeeded.
+    sleep(1);
+    insert_sensor(db2,33,2.13,time ( NULL )); // Data insertion succeeded.
+*/
+
     sleep(1);
     insert_sensor(db,1,13.18,time ( NULL )); // Data insertion succeeded.
+
+
     close_db(db); // The csv file has been closed.
+    //close_db(db2); // The csv file has been closed.
 
     return 0;
 }

@@ -12,12 +12,13 @@
 #define WRITE_END 1
 
 // global vars
-pid_t pid;
-int fd[2];
-extern int* line_count;
+extern pid_t pid;
+extern int fd[2];
+extern bool is_logger_running;
 
 FILE * open_db(char * filename, bool append){ // parent process
     // spawns the logger process (child)
+    //if(!is_logger_running) spawn_logger();
     spawn_logger();
     char *log_event_message;
 
@@ -41,6 +42,7 @@ int insert_sensor(FILE * db, sensor_id_t id, sensor_value_t value, sensor_ts_t t
 
     char *log_event_message;
     if (!db) {
+        //if(!is_logger_running) spawn_logger();
         spawn_logger();
         //printf("sensor_db.c: !f FILE log is : %p \n", db);
         log_event_message = "An error occurred when writing to the csv file.";
@@ -74,6 +76,7 @@ int close_db(FILE * f){ // parent process
 
     char *log_event_message;
     if (!f) {
+        //if(!is_logger_running) spawn_logger();
         spawn_logger();
         log_event_message = "An error occurred when closing the csv file.";
         // ------------------DB Close fail Event-----------------//

@@ -11,15 +11,16 @@
 #define WRITE_END 1
 
 // global vars
-extern pid_t pid;
-extern int fd[2];
+pid_t pid;
+int fd[2];
+//bool is_logger_running = false;
 static int *line_count;
 
 
 int spawn_logger() { // spawns the logger process (child) that runs the logger.c
-
+    //is_logger_running = true;
     // Put counter in shared memory so that it can be accessed by child process
-    line_count = mmap(0, sizeof(sem_t), PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
+    line_count = mmap(0, sizeof(int), PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
     (*line_count) = 0;
     // open logger and count number of lines
     FILE *logger;
@@ -106,6 +107,6 @@ int log_message(){ //child process
     fclose(log); // for now, we'll open and close the log file every time
     close(fd[READ_END]);
     kill(getpid(), SIGSEGV);
-
+    //is_logger_running = false;
     return 0;
 }
