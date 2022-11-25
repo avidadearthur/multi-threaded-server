@@ -14,7 +14,6 @@
 // global vars
 pid_t pid;
 int fd[2];
-sem_t * sem; // We want a semaphore in shared memory using a pointer instead
 extern int* line_count;
 
 FILE * open_db(char * filename, bool append){ // parent process
@@ -42,13 +41,17 @@ int insert_sensor(FILE * db, sensor_id_t id, sensor_value_t value, sensor_ts_t t
 
     char *log_event_message;
     if (!db) {
+        spawn_logger();
         //printf("sensor_db.c: !f FILE log is : %p \n", db);
         log_event_message = "An error occurred when writing to the csv file.";
         // --------------------Fail Insert Sensor Event---------------//
         // trying to insert the sensor before the file is created
-        // will not log anything, there's no child
+        // will not log anything, there's no child,
         // but it will work if you have other files open - solve later
         write(fd[WRITE_END], log_event_message, strlen(log_event_message)+1);
+        close(fd[WRITE_END]);
+        wait(NULL); // wait for the child to finish
+
 
         return -1;
     }
@@ -71,9 +74,12 @@ int close_db(FILE * f){ // parent process
 
     char *log_event_message;
     if (!f) {
+        spawn_logger();
         log_event_message = "An error occurred when closing the csv file.";
         // ------------------DB Close fail Event-----------------//
         write(fd[WRITE_END], log_event_message, strlen(log_event_message)+1);
+        close(fd[WRITE_END]);
+        wait(NULL); // wait for the child to finish
 
         return -1;
     }

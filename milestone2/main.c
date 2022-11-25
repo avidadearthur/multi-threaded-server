@@ -23,7 +23,7 @@ int main(void){
     db = NULL;
     // trying to insert the sensor before the file is created
     // will not log anything, there's no child - solve later
-    // insert_sensor(db,3,15.13,time ( NULL )); // An error occurred when writing to the csv file.
+    insert_sensor(db,99,35.13,time ( NULL )); // An error occurred when writing to the csv file.
     db = open_db("sensor_db.txt", true); // A new csv file is created or an existing file has been opened.
     insert_sensor(db,3,11.11,time ( NULL )); // Data insertion succeeded.
     insert_sensor(db,5,19.13,time ( NULL )); // Data insertion succeeded.
@@ -31,9 +31,10 @@ int main(void){
     close_db(db); // The csv file has been closed.
 
     db = NULL;
+    close_db(db); // The csv file has been closed.
     // trying to insert the sensor before the file is created
     // will not log anything, there's no child - solve later
-    // insert_sensor(db,3,15.13,time ( NULL )); // An error occurred when writing to the csv file.
+    insert_sensor(db,77,15.13,time ( NULL )); // An error occurred when writing to the csv file.
     db = open_db("sensor_db.txt", true); // A new csv file is created or an existing file has been opened.
     insert_sensor(db,3,15.13,time ( NULL )); // Data insertion succeeded.
     sleep(1); // test different input speeds

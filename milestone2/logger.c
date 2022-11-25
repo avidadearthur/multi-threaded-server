@@ -3,7 +3,6 @@
 #include <string.h>
 #include <stdlib.h>
 #include <signal.h>
-#include <sys/wait.h>
 #include "logger.h"
 #include "sensor_db.h"
 
