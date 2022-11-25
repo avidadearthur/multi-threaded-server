@@ -14,15 +14,25 @@
 // global vars
 extern pid_t pid;
 extern int fd[2];
-extern sem_t * sem;
+static int *line_count;
 
 
 int spawn_logger() { // spawns the logger process (child) that runs the logger.c
 
-    // from: https://stackoverflow.com/questions/5290985/what-happens-when-a-process-enters-a-semaphore-critical-section-and-sleeps
-    // Put semaphore in shared memory so that it can be accessed by child process
-    // sem = mmap(0, sizeof(sem_t), PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
-    // sem_init(sem,1,0); // init semaphore such that wait(sem) will block parent process
+    // Put counter in shared memory so that it can be accessed by child process
+    line_count = mmap(0, sizeof(sem_t), PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
+    (*line_count) = 0;
+    // open logger and count number of lines
+    FILE *logger;
+    logger = fopen("gateway.log", "r");
+    char c;
+    while ((c = fgetc(logger)) != EOF) {
+        if (c == '\n') {
+            (*line_count)++;
+        }
+    }
+    // close logger
+    fclose(logger);
 
     if (pipe(fd) == -1) {
         printf("messenger.c: Pipe failed\n");
@@ -57,8 +67,7 @@ int log_message(){ //child process
     close(fd[WRITE_END]);
     char buffer[BUFSIZ];
     char message[BUFSIZ];
-    //char *message;
-    int count;
+    int count = 0;
     char ts[64];
 
     FILE * log;
@@ -78,7 +87,8 @@ int log_message(){ //child process
             if(buffer[i] == '\0'){
                 if(message[0] != '\0'){
                     // <sequence number> // solve later
-                    count = 0;
+                    (*line_count)++;
+                    count = *line_count;
                     // <timestamp> // num of sec since 01/01/70
                     time_t t = time(NULL);
                     struct tm *tm = localtime(&t);

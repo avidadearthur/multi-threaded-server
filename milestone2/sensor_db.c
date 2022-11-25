@@ -15,7 +15,7 @@
 pid_t pid;
 int fd[2];
 sem_t * sem; // We want a semaphore in shared memory using a pointer instead
-
+extern int* line_count;
 
 FILE * open_db(char * filename, bool append){ // parent process
     // spawns the logger process (child)
