@@ -69,6 +69,8 @@ int sbuffer_insert(sbuffer_t *buffer, sensor_data_t *data) {
     if (dummy == NULL) return SBUFFER_FAILURE;
     dummy->data = *data;
     dummy->next = NULL;
+
+    // Lock the buffer before modifying it
     if (buffer->tail == NULL) // buffer empty (buffer->head should also be NULL
     {
         buffer->head = buffer->tail = dummy;
@@ -77,5 +79,7 @@ int sbuffer_insert(sbuffer_t *buffer, sensor_data_t *data) {
         buffer->tail->next = dummy;
         buffer->tail = buffer->tail->next;
     }
+    // Unlock the buffer
+
     return SBUFFER_SUCCESS;
 }
