@@ -7,7 +7,6 @@
 #include <string.h>
 #include <sys/wait.h>
 #include <semaphore.h>
-#include <unistd.h>
 #include <sys/mman.h>
 #include "messenger.h"
 #include "receiver.h"
