@@ -24,8 +24,6 @@ struct sbuffer {
     sbuffer_node_t *tail;       /**< a pointer to the last node in the buffer */
 };
 
-// TODO: sbuffer_read needs to wait if the buffer is empty
-// TODO: sbuffer_write needs to wait if the buffer read is removing data from the buffer
 
 // Declare global mutex and condition variables
 pthread_mutex_t mutex;

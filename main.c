@@ -1,7 +1,9 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <pthread.h>
 #include <string.h>
 #include "sbuffer.h"
+
 
 sbuffer_t *buffer;
 
@@ -23,7 +25,8 @@ int main()
 
     // Open sensor_data_out file
     FILE *sensor_data_out_fp;
-    sensor_data_out_fp = fopen("sensor_data_out", "w");
+    sensor_data_out_fp = fopen("sensor_data_out.csv", "w+");
+
 
     // Start thread 1 and 2 for writing sensor_data_out file
     pthread_t reader_thread1;
@@ -107,23 +110,26 @@ void *writer(void *fp)
 void *reader(void *fp)
 {
     // cast fp to FILE
-    //FILE *sensor_data_out_fp = (FILE *)fp;
+    FILE *sensor_data_out_fp = (FILE *)fp;
 
     // Init data as sensor_data_t
     sensor_data_t data;
     do{
         // read data from buffer
         if (sbuffer_remove(buffer, &data) == 0) { // SBUFFER_SUCCESS 0
-            // write data to sensor_data_out file
-            // fwrite(&data, sizeof(sensor_data_t), 1, sensor_data_out_fp);
+            // create message for fwrite
+            // allocate memory for message
+            //char message[100];
+            //sprintf(message, "%d, %f, %ld\n", data.id, data.value, data.ts);
+            // write message to sensor_data_out file
+            fprintf(sensor_data_out_fp,"%d, %f, %ld\n", data.id, data.value, data.ts);
+            //fwrite(message, sizeof(sensor_data_t), 1, sensor_data_out_fp);
             // print data for testing
-            printf("data.id: %d, data.value: %f, data.ts: %ld \n", data.id, data.value, data.ts);
+            // printf("data.id: %d, data.value: %f, data.ts: %ld \n", data.id, data.value, data.ts);
+            // free message
         }
     }
     while(data.id != 0);
-
-    // free allocated memory
-    // free(fp);
 
     return NULL;
 }
