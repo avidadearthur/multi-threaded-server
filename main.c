@@ -5,8 +5,8 @@
 
 sbuffer_t *buffer;
 
-void *writer(void *arg);
-void *reader(void *arg);
+void *writer(void *fp);
+void *reader(void *fp);
 
 int main()
 {
@@ -32,14 +32,16 @@ int main()
     pthread_create(&reader_thread2, NULL, &reader, sensor_data_out_fp);
 
     // Wait for threads to finish and join them
-    pthread_join(writer_thread, NULL);
+
     pthread_join(reader_thread1, NULL);
     pthread_join(reader_thread2, NULL);
+    pthread_join(writer_thread, NULL);
+
 
     // Close sensor_data file
     fclose(sensor_data_fp);
     // Close sensor_data_out file
-    //fclose(sensor_data_out_fp);
+    fclose(sensor_data_out_fp);
 
     // free buffer
     sbuffer_free(&buffer);
@@ -90,6 +92,7 @@ void *writer(void *fp)
     sensor_data.ts = 0;
     sbuffer_insert(buffer, &sensor_data);
 
+
     return NULL;
 }
 
@@ -110,11 +113,12 @@ void *reader(void *fp)
     sensor_data_t data;
     do{
         // read data from buffer
-        sbuffer_remove(buffer, &data);
-        // write data to sensor_data_out file
-        // fwrite(&data, sizeof(sensor_data_t), 1, sensor_data_out_fp);
-        // print data for testing
-        printf("data.id: %d, data.value: %f, data.ts: %ld \n", data.id, data.value, data.ts);
+        if (sbuffer_remove(buffer, &data) == 0) { // SBUFFER_SUCCESS 0
+            // write data to sensor_data_out file
+            // fwrite(&data, sizeof(sensor_data_t), 1, sensor_data_out_fp);
+            // print data for testing
+            printf("data.id: %d, data.value: %f, data.ts: %ld \n", data.id, data.value, data.ts);
+        }
     }
     while(data.id != 0);
 
