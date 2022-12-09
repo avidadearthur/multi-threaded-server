@@ -16,7 +16,7 @@ sensor_gateway : main.c connmgr.c datamgr.c sensor_db.c sbuffer.c lib/libdplist.
 	gcc -c sensor_db.c -Wall -std=c11 -Werror -DSET_MIN_TEMP=10 -DSET_MAX_TEMP=20 -DTIMEOUT=5 -o sensor_db.o -fdiagnostics-color=auto
 	gcc -c sbuffer.c   -Wall -std=c11 -Werror -DSET_MIN_TEMP=10 -DSET_MAX_TEMP=20 -DTIMEOUT=5 -o sbuffer.o   -fdiagnostics-color=auto
 	@echo "$(TITLE_COLOR)\n***** LINKING sensor_gateway *****$(NO_COLOR)"
-	gcc main.o connmgr.o datamgr.o sensor_db.o sbuffer.o -ldplist -ltcpsock -lpthread -o sensor_gateway -Wall -L./lib -Wl,-rpath=./lib -lsqlite3 -fdiagnostics-color=auto
+	gcc main.o connmgr.o datamgr.o sensor_db.o sbuffer.o -ldplist -ltcpsock -lpthread -o sensor_gateway -Wall -L./lib -Wl,-rpath=./lib -fdiagnostics-color=auto
 
 file_creator : file_creator.c
 	@echo "$(TITLE_COLOR)\n***** COMPILE & LINKING file_creator *****$(NO_COLOR)"
@@ -56,8 +56,16 @@ clean-all: clean
 run : sensor_gateway sensor_node
 	@echo "Add your own implementation here..."
 
-test: main.c
-	gcc -g -Wall -Werror -o main main.c
+run_server: main.c sensor_db.c lib/tcpsock.c lib/dplist.c
+	gcc sensor_node.c lib/tcpsock.c -o sensor_node
+	gcc -g -Wall -Werror -o test_server main.c sensor_db.c lib/tcpsock.c lib/dplist.c -lm -lpthread
+	./test_server
+
+runclient1: sensor_node
+	./sensor_node 1 2 127.0.0.1 $(port)
+
+runclient2: sensor_node
+	./sensor_node 2 5 127.0.0.1 $(port)
 
 zip:
 	zip lab_final.zip main.c connmgr.c connmgr.h datamgr.c datamgr.h sbuffer.c sbuffer.h sensor_db.c sensor_db.h config.h lib/dplist.c lib/dplist.h lib/tcpsock.c lib/tcpsock.h

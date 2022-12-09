@@ -3,7 +3,188 @@
  */
 
 #include <stdio.h>
+#include <stdlib.h>
+#include <inttypes.h>
+#include "config.h"
+#include "lib/tcpsock.h"
+#include "lib/dplist.h"
+#include <pthread.h>
+#include <unistd.h>
+#include <string.h>
+#include "sensor_db.h"
 
-int main(){
-    printf("Hello World\n");
+#define PORT 5678   // default port number for testing
+#define MAX_CONN 3  // state the max. number of connections the server will handle before exiting
+
+/** Global vars*/
+int fd[2]; // file descriptor for the pipe
+
+/** Parent process treads */
+//void *storage_manager(void);
+//void *data_manager(void);
+
+/*
+typedef struct {
+    int port;
+    int fd[2];
+} conn_mngr_args;
+*/
+
+void *connection_manager(void *port);
+
+/** Connection manager will listen on a  TCP socket and
+ * will spawn a client manager for each new connection */
+void *client_manager(void *client);
+
+/**
+ * The sensor gateway has a main process and a logger (child) process.
+ * The main runs three threads at startup:
+ * 1. connection manager thread
+ * 2. data manager thread
+ * 3. storage manager thread
+ *
+ * The connection manager thread is responsible for:
+ * 1. listens for new connections from sensors on a TCP socket
+ * 2. creates a new thread for each new connection
+ *    2.1. the new thread is responsible for reading the data from the sensor
+ *
+ */
+int main(int argc, char *argv[]) {
+    // TODO: check user port input for errors
+    int port_number = PORT;
+
+    // check command line arguments
+    if (argc == 1) {
+        fprintf(stderr, "Using default port %d\n", port_number);
+    }
+        // check for only one command line argument
+    else if (argc > 2) {
+        fprintf(stderr, "Usage: %s port (default port is %d)\n", argv[0], PORT);
+        exit(EXIT_FAILURE);
+    }
+    else {
+        // convert argv[1] to integer with strtol
+        port_number = strtol(argv[1], NULL, 10);
+        if (port_number < 1024 || port_number > 65535) {
+            fprintf(stderr, "Invalid port number \n");
+            fprintf(stderr, "Usage: %s port (default port is %d)\n", argv[0], PORT);
+            exit(EXIT_FAILURE);
+        }
+    }
+
+    // TODO: fork in two processes: main and logger
+    switch (fork()) {
+        case -1:
+            perror("Fork failed");
+            exit(EXIT_FAILURE);
+        case 0:
+            // child process
+            // close the write end of the pipe
+            close(fd[WRITE_END]);
+            spawn_logger();
+
+            // do nothing for now
+            printf("Child process\n");
+        default:
+            // parent process
+            // close the read end of the pipe
+            close(fd[READ_END]);
+
+            printf("Test server is started at port %d \n", port_number);
+            // TODO: run connection manager thread
+
+
+            pthread_t connection_manager_thread;
+            pthread_create(&connection_manager_thread, NULL, connection_manager, &port_number);
+
+            // TODO: run data manager thread
+
+            // TODO: run storage manager thread
+
+    }
+
+}
+
+/** Parent process treads */
+
+void *connection_manager(void *port) {
+    tcpsock_t *server, *client;
+    pthread_t tid;
+
+    // cast port to int
+    int port_number = *(int *) port;
+
+    int conn_counter = 0;
+
+    if (tcp_passive_open(&server, port_number) != TCP_NO_ERROR) exit(EXIT_FAILURE);
+    do {
+        if (tcp_wait_for_connection(server, &client) != TCP_NO_ERROR) exit(EXIT_FAILURE);
+        printf("Incoming client connection\n");
+        conn_counter++;
+
+        pthread_create(&tid, NULL,  client_manager, client);
+
+    } while (conn_counter < MAX_CONN);
+
+    for (int i = 0; i < MAX_CONN; i++) {
+        pthread_join(tid, NULL);
+    }
+
+    pthread_exit(NULL);
+}
+
+void *client_manager(void *client){
+    bool new_connection = true;
+    char *log_event_message = NULL;
+    sensor_data_t data;
+    int bytes, result;
+    tcpsock_t *client_sock = (tcpsock_t *) client;
+
+    do {
+        // read sensor ID
+        bytes = sizeof(data.id);
+        tcp_receive(client_sock, (void *) &data.id, &bytes);
+
+        if (new_connection) {
+
+            // log this into the log file
+            log_event_message = malloc(sizeof(char) * 100);
+            sprintf(log_event_message, "New connection from sensor %d", data.id);
+            // --------------------New client connection Event-----------------//
+            write(fd[WRITE_END], log_event_message, strlen(log_event_message)+1);
+            printf("%s", log_event_message);
+            free(log_event_message);
+
+            new_connection = false;
+        }
+
+        // read temperature
+        bytes = sizeof(data.value);
+        tcp_receive(client_sock, (void *) &data.value, &bytes);
+        // read timestamp
+        bytes = sizeof(data.ts);
+        result = tcp_receive(client_sock, (void *) &data.ts, &bytes);
+        if ((result == TCP_NO_ERROR) && bytes) {
+            // this will go into the sbuffer
+            printf("sensor id = %" PRIu16 " - temperature = %g - timestamp = %ld\n", data.id, data.value,
+                   (long int) data.ts);
+        }
+    } while (result == TCP_NO_ERROR);
+    if (result == TCP_CONNECTION_CLOSED){
+
+        // log this into the log file
+        log_event_message = malloc(sizeof(char) * 100);
+        sprintf(log_event_message, "Sensor node %d has closed connection\n", data.id);
+        // --------------------Client closing connection Event-----------------//
+        write(fd[WRITE_END], log_event_message, strlen(log_event_message)+1);
+        printf("%s", log_event_message);
+        free(log_event_message);
+
+    }
+    else {
+        printf("Error occurred on connection to peer\n");
+    }
+    tcp_close(&client_sock);
+
+    pthread_exit(NULL);
 }
