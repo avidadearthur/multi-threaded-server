@@ -12,6 +12,7 @@
 static int *line_count;
 extern int fd[2];
 
+
 int spawn_logger() { // spawns the logger process (child) that runs the logger.c
 
     // Put counter in shared memory so that it can be accessed by child process
@@ -33,12 +34,6 @@ int spawn_logger() { // spawns the logger process (child) that runs the logger.c
     // close logger
     fclose(logger);
 
-    // create the pipe
-    if (pipe(fd) == -1) {
-        printf("messenger.c: Pipe failed\n");
-        return -1;
-    }
-
     // child process
     log_message();
 
@@ -46,6 +41,7 @@ int spawn_logger() { // spawns the logger process (child) that runs the logger.c
 }
 
 int log_message(){ //child process
+    printf("logger.c: child process log_message started\n");
     char buffer[BUFSIZ];
     char message[BUFSIZ];
     int count = 0;
@@ -54,10 +50,12 @@ int log_message(){ //child process
     FILE * log;
     log = fopen("gateway.log", "a");
 
+    // clear the buffer
+    memset(buffer, 0, BUFSIZ);
+
     // read is looping over every byte in the pipe
     // and is a blocking call until there's something to read
     // or the pipe is closed
-    // sleep(1); to test that the parsing works
     while(read( fd[READ_END], buffer, BUFSIZ) > 0 ) {
         int j = 0;
         memset(message, ' ', BUFSIZ); // make sure its empty
@@ -86,8 +84,8 @@ int log_message(){ //child process
         memset(message, ' ', BUFSIZ); // clear message
     }
     fclose(log); // for now, we'll open and close the log file every time
+    printf("logger.c: child process log_message finished\n");
     close(fd[READ_END]);
-    kill(getpid(), SIGSEGV);
-    //is_logger_running = false;
+
     return 0;
 }

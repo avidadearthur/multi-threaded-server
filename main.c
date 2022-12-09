@@ -18,17 +18,11 @@
 
 /** Global vars*/
 int fd[2]; // file descriptor for the pipe
+pthread_mutex_t pipe_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 /** Parent process treads */
 //void *storage_manager(void);
 //void *data_manager(void);
-
-/*
-typedef struct {
-    int port;
-    int fd[2];
-} conn_mngr_args;
-*/
 
 void *connection_manager(void *port);
 
@@ -73,9 +67,15 @@ int main(int argc, char *argv[]) {
     }
 
     // TODO: fork in two processes: main and logger
+    // create the pipe
+    if (pipe(fd) == -1) {
+        printf("main: Pipe failed\n");
+        return -1;
+    }
+
     switch (fork()) {
         case -1:
-            perror("Fork failed");
+            perror("main: Fork failed\n");
             exit(EXIT_FAILURE);
         case 0:
             // child process
@@ -84,13 +84,10 @@ int main(int argc, char *argv[]) {
             spawn_logger();
 
             // do nothing for now
-            printf("Child process\n");
+            printf("main: Child process\n");
         default:
             // parent process
-            // close the read end of the pipe
-            close(fd[READ_END]);
-
-            printf("Test server is started at port %d \n", port_number);
+            printf("main: Test server is started at port %d \n", port_number);
             // TODO: run connection manager thread
 
 
@@ -101,6 +98,8 @@ int main(int argc, char *argv[]) {
 
             // TODO: run storage manager thread
 
+            // wait for the connection manager thread to finish
+            pthread_join(connection_manager_thread, NULL);
     }
 
 }
@@ -110,6 +109,16 @@ int main(int argc, char *argv[]) {
 void *connection_manager(void *port) {
     tcpsock_t *server, *client;
     pthread_t tid;
+    char *log_event_message;
+
+    // entered connection manager thread
+    printf("connection_manager: Connection manager thread started\n");
+
+    // log this into the log file
+    log_event_message = "Connection manager thread started.";
+    // --------------------Connection manager thread start Event-----------------//
+    write(fd[WRITE_END], log_event_message, strlen(log_event_message)+1);
+
 
     // cast port to int
     int port_number = *(int *) port;
@@ -119,7 +128,7 @@ void *connection_manager(void *port) {
     if (tcp_passive_open(&server, port_number) != TCP_NO_ERROR) exit(EXIT_FAILURE);
     do {
         if (tcp_wait_for_connection(server, &client) != TCP_NO_ERROR) exit(EXIT_FAILURE);
-        printf("Incoming client connection\n");
+        printf("connection_manager: Incoming client connection\n");
         conn_counter++;
 
         pthread_create(&tid, NULL,  client_manager, client);
@@ -130,12 +139,15 @@ void *connection_manager(void *port) {
         pthread_join(tid, NULL);
     }
 
+    // print connection manager thread exit message
+    printf("connection_manager: Connection manager thread exited\n");
     pthread_exit(NULL);
+
 }
 
 void *client_manager(void *client){
     bool new_connection = true;
-    char *log_event_message = NULL;
+    char *log_event_message;
     sensor_data_t data;
     int bytes, result;
     tcpsock_t *client_sock = (tcpsock_t *) client;
@@ -146,13 +158,14 @@ void *client_manager(void *client){
         tcp_receive(client_sock, (void *) &data.id, &bytes);
 
         if (new_connection) {
-
             // log this into the log file
-            log_event_message = malloc(sizeof(char) * 100);
+            // allocate memory for the log message
+            log_event_message = (char *) malloc(sizeof(char) * 100);
             sprintf(log_event_message, "New connection from sensor %d", data.id);
+            // trim the string
+            log_event_message = realloc(log_event_message, strlen(log_event_message)+1);
             // --------------------New client connection Event-----------------//
             write(fd[WRITE_END], log_event_message, strlen(log_event_message)+1);
-            printf("%s", log_event_message);
             free(log_event_message);
 
             new_connection = false;
@@ -173,11 +186,13 @@ void *client_manager(void *client){
     if (result == TCP_CONNECTION_CLOSED){
 
         // log this into the log file
-        log_event_message = malloc(sizeof(char) * 100);
+        // allocate memory for the log message
+        log_event_message = (char *) malloc(sizeof(char) * 100);
         sprintf(log_event_message, "Sensor node %d has closed connection\n", data.id);
+        // trim the string
+        log_event_message = realloc(log_event_message, strlen(log_event_message)+1);
         // --------------------Client closing connection Event-----------------//
         write(fd[WRITE_END], log_event_message, strlen(log_event_message)+1);
-        printf("%s", log_event_message);
         free(log_event_message);
 
     }
