@@ -56,9 +56,9 @@ clean-all: clean
 run : sensor_gateway sensor_node
 	@echo "Add your own implementation here..."
 
-build_test: main.c sensor_db.c connmgr.c lib/tcpsock.c lib/dplist.c
+build_test: main.c sensor_db.c connmgr.c sbuffer.c lib/tcpsock.c lib/dplist.c
 	gcc sensor_node.c lib/tcpsock.c -o sensor_node
-	gcc -g -Wall -Werror -o test_server main.c sensor_db.c connmgr.c lib/tcpsock.c lib/dplist.c -lm -lpthread
+	gcc -g -Wall -Werror -o test_server main.c sensor_db.c connmgr.c sbuffer.c lib/tcpsock.c lib/dplist.c -lm -lpthread
 
 run_server:
 	./test_server

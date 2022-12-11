@@ -5,6 +5,10 @@
 #ifndef _SBUFFER_H_
 #define _SBUFFER_H_
 
+#include <stdlib.h>
+#include <stdio.h>
+#include <pthread.h>
+#include <assert.h>
 #include "config.h"
 
 #define SBUFFER_FAILURE -1

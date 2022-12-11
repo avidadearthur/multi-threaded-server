@@ -2,6 +2,11 @@
  * \author Arthur Tavares Quintao
  */
 
+#include <string.h>
+#include <stdlib.h>
+#include <inttypes.h>
+#include <pthread.h>
+#include <stdio.h>
 #include "lib/tcpsock.h"
 #include "lib/dplist.h"
 #include "config.h"

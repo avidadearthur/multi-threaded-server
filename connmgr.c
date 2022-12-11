@@ -2,19 +2,15 @@
  * \author Arthur Tavares Quintao
  */
 
-#include <string.h>
-#include <stdlib.h>
-#include <inttypes.h>
-#include <pthread.h>
-#include <stdio.h>
 #include "connmgr.h"
+#include "datamgr.h"
 
 /** Global vars*/
 extern int fd[2]; // file descriptor for the pipe
 extern pthread_mutex_t pipe_mutex;
+extern sbuffer_t *shared_buffer;
 
-
-/** Parent process thread.*/
+/** Parent process thread */
 
 void *connection_manager(void *port) {
     tcpsock_t *server, *client;
@@ -104,17 +100,32 @@ void *client_manager(void *client){
         bytes = sizeof(data.ts);
         result = tcp_receive(client_sock, (void *) &data.ts, &bytes);
         if ((result == TCP_NO_ERROR) && bytes) {
+
             // this will go into the sbuffer
-            printf("sensor id = %" PRIu16 " - temperature = %g - timestamp = %ld\n", data.id, data.value,
-                    (long int) data.ts);
+            // create sensor_data_t
+            sensor_data_t sensor_data;
+            sensor_data.id = data.id;
+            sensor_data.value = data.value;
+            sensor_data.ts = data.ts;
+            // insert sensor_data into buffer
+            sbuffer_insert(shared_buffer, &sensor_data);
+
+            // printf("sensor id = %" PRIu16 " - temperature = %g - timestamp = %ld\n", data.id, data.value, (long int) data.ts);
         }
     } while (result == TCP_NO_ERROR);
     if (result == TCP_CONNECTION_CLOSED){
-        // log this into the log file
         // ------------------Client closing connection Event------------------//
         message = "Sensor node %d has closed connection.";
         write_to_pipe(message, data.id);
         // -------------------------------------------------------------------//
+
+        // Add dummy data to buffer to signal end of file
+        sensor_data_t sensor_data;
+        sensor_data.id = 0;
+        sensor_data.value = 0;
+        sensor_data.ts = 0;
+        sbuffer_insert(shared_buffer, &sensor_data);
+
     }
     else {
         printf("Error occurred on connection to peer\n");

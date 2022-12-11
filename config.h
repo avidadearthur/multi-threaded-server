@@ -7,6 +7,7 @@
 
 #include <stdint.h>
 #include <time.h>
+#include <pthread.h>
 
 #define PORT 5678   // default port number for testing
 #define MAX_CONN 3  // state the max. number of connections the server will handle before exiting

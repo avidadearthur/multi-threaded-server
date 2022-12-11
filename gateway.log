@@ -1,13 +1,13 @@
 start of test
-1, 2022-12-11 19:03:07, Connection manager thread started.
-2, 2022-12-11 19:03:07, Test server started at port 5678.
-3, 2022-12-11 19:03:16, New connection from sensor 1.
-4, 2022-12-11 19:03:18, Sensor node 1 has closed connection.
-5, 2022-12-11 19:03:20, New connection from sensor 1.
-6, 2022-12-11 19:03:22, Sensor node 1 has closed connection.
-7, 2022-12-11 19:03:24, New connection from sensor 1.
-8, 2022-12-11 19:03:30, Sensor node 1 has closed connection.
-9, 2022-12-11 19:03:30, Max connections reached. Server is closing.
-10, 2022-12-11 19:03:30, Server closed TCP port.
-11, 2022-12-11 19:03:30, Connection manager thread will exit.
+1, 2022-12-11 20:38:12, Connection manager thread started.
+2, 2022-12-11 20:38:12, Test server started at port 5678.
+3, 2022-12-11 20:42:58, New connection from sensor 1.
+4, 2022-12-11 20:43:38, Sensor node 1 has closed connection.
+5, 2022-12-11 20:43:42, New connection from sensor 3.
+6, 2022-12-11 20:43:43, Sensor node 3 has closed connection.
+7, 2022-12-11 20:43:53, New connection from sensor 2.
+8, 2022-12-11 20:43:54, Sensor node 2 has closed connection.
+9, 2022-12-11 20:43:54, Max connections reached. Server is closing.
+10, 2022-12-11 20:43:54, Server closed TCP port.
+11, 2022-12-11 20:43:54, Connection manager thread will exit.
 end of test

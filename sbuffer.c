@@ -2,10 +2,6 @@
  * \author Arthur Tavares Quintao
  */
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <pthread.h>
-#include <assert.h>
 #include "sbuffer.h"
 
 /**

@@ -12,24 +12,16 @@
 #include <string.h>
 #include "sensor_db.h"
 #include "connmgr.h"
+#include "sbuffer.h"
+
 
 
 /** Global vars*/
 int fd[2]; // file descriptor for the pipe
 pthread_mutex_t pipe_mutex = PTHREAD_MUTEX_INITIALIZER;
+sbuffer_t *shared_buffer;
 
-/** Parent process treads */
-//void *storage_manager(void);
-//void *data_manager(void);
 
-/**
- * The sensor gateway has a main process and a logger (child) process.
- * The main runs three threads at startup:
- * 1. connection manager thread
- * 2. data manager thread
- * 3. storage manager thread
- *
- */
 int main(int argc, char *argv[]) {
     // TODO: check user port input for errors
     int port_number = PORT;
@@ -71,9 +63,14 @@ int main(int argc, char *argv[]) {
             log_messages();
             close(fd[READ_END]);
             exit(EXIT_SUCCESS);
+
         default:
             // parent process
             close(fd[READ_END]);
+
+            // TODO: initialize the shared buffer
+            // Initialize the buffer
+            sbuffer_init(&shared_buffer);
 
             // TODO: run connection manager thread
             pthread_t connection_manager_thread;
@@ -82,13 +79,19 @@ int main(int argc, char *argv[]) {
             // TODO: run data manager thread
 
             // TODO: run storage manager thread
+            pthread_t storage_manager_thread;
+            pthread_create(&storage_manager_thread, NULL, storage_manager, NULL);
 
             // TODO: close all threads and exit
             // wait for the connection manager thread to finish
             pthread_join(connection_manager_thread, NULL);
+            pthread_join(storage_manager_thread, NULL);
             // wait for the child process to finish
             close(fd[WRITE_END]);
             wait(NULL);
+
+            // free buffer
+            sbuffer_free(&shared_buffer);
     }
 }
 
