@@ -31,11 +31,6 @@ pthread_mutex_t pipe_mutex = PTHREAD_MUTEX_INITIALIZER;
  * 2. data manager thread
  * 3. storage manager thread
  *
- * The connection manager thread is responsible for:
- * 1. listens for new connections from sensors on a TCP socket
- * 2. creates a new thread for each new connection
- *    2.1. the new thread is responsible for reading the data from the sensor
- *
  */
 int main(int argc, char *argv[]) {
     // TODO: check user port input for errors

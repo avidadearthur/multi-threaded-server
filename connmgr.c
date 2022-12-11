@@ -1,22 +1,20 @@
-#include <unistd.h>
+/**
+ * \author Arthur Tavares Quintao
+ */
+
 #include <string.h>
 #include <stdlib.h>
-#include <signal.h>
 #include <inttypes.h>
-#include "config.h"
-#include "lib/tcpsock.h"
-#include "lib/dplist.h"
 #include <pthread.h>
-#include <unistd.h>
+#include <stdio.h>
 #include "connmgr.h"
-#include "sensor_db.h"
 
 /** Global vars*/
 extern int fd[2]; // file descriptor for the pipe
 extern pthread_mutex_t pipe_mutex;
 
 
-/** Parent process treads */
+/** Parent process thread.*/
 
 void *connection_manager(void *port) {
     tcpsock_t *server, *client;
@@ -54,25 +52,25 @@ void *connection_manager(void *port) {
     // --------------------Max connections reached Event-----------------------//
     message = "Max connections reached. Server is closing.";
     write_to_pipe(message, -1);
-    // -------------------------------------------------------------------------------//
+    // ------------------------------------------------------------------------//
 
     if (tcp_close(&server) != TCP_NO_ERROR){
-        // --------------------Connection manager thread start Event-------------------//
+        // ----------------Connection manager thread start Event---------------//
         message = "Server failed to close TCP port.";
         write_to_pipe(message, -1);
-        // ----------------------------------------------------------------------------//
+        // --------------------------------------------------------------------//
         exit(EXIT_FAILURE);
     }
     else{
-        // --------------------Connection manager thread start Event-------------------//
+        // ------------Connection manager thread start Event-------------------//
         message = "Server closed TCP port.";
         write_to_pipe(message, -1);
-        // ---------------------------------------------------------------------------//
+        // --------------------------------------------------------------------//
     }
-    // --------------------Connection manager thread start Event----------------------//
+    // ---------------Connection manager thread start Event--------------------//
     message = "Connection manager thread will exit.";
     write_to_pipe(message, -1);
-    // ------------------------------------------------------------------------------//
+    // ------------------------------------------------------------------------//
     pthread_exit(NULL);
 
 }
@@ -91,10 +89,10 @@ void *client_manager(void *client){
         tcp_receive(client_sock, (void *) &data.id, &bytes);
 
         if (new_connection) {
-            // -----------------------New client connection Event-------------------------//
+            // --------------------New client connection Event-----------------//
             message = "New connection from sensor %d.";
             write_to_pipe(message, data.id);
-            // ---------------------------------------------------------------------------//
+            // ----------------------------------------------------------------//
 
             new_connection = false;
         }
@@ -113,10 +111,10 @@ void *client_manager(void *client){
     } while (result == TCP_NO_ERROR);
     if (result == TCP_CONNECTION_CLOSED){
         // log this into the log file
-        // ----------------------------Client closing connection Event-------------------//
+        // ------------------Client closing connection Event------------------//
         message = "Sensor node %d has closed connection.";
         write_to_pipe(message, data.id);
-        // ------------------------------------------------------------------------------//
+        // -------------------------------------------------------------------//
     }
     else {
         printf("Error occurred on connection to peer\n");
