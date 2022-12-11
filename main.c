@@ -21,8 +21,6 @@ pthread_mutex_t pipe_mutex = PTHREAD_MUTEX_INITIALIZER;
 /** Parent process treads */
 //void *storage_manager(void);
 //void *data_manager(void);
-//void *connection_manager(void *port);
-//void *client_manager(void *client);
 
 /**
  * The sensor gateway has a main process and a logger (child) process.
@@ -93,6 +91,7 @@ int main(int argc, char *argv[]) {
             wait(NULL);
     }
 }
+
 
 /** Logger functions */
 
