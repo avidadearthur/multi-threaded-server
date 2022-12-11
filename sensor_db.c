@@ -11,44 +11,22 @@
 /** Global vars*/
 static int *line_count;
 extern int fd[2];
+extern bool logger_running;
 
-
-int spawn_logger() { // spawns the logger process (child) that runs the logger.c
+int log_messages(){ //child process
+    printf("sensor_db.c: child process log_message started\n");
+    char buffer[BUFSIZ];
+    char message[BUFSIZ];
+    int count = 0;
+    char ts[64];
 
     // Put counter in shared memory so that it can be accessed by child process
     line_count = mmap(0, sizeof(int), PROT_READ | PROT_WRITE, MAP_SHARED | 0x20, -1, 0);
     (*line_count) = 0;
     // open logger and count number of lines
     FILE *logger;
-    logger = fopen("gateway.log", "r");
-    if (logger == NULL) {
-        // create the file if it doesn't exist
-        logger = fopen("gateway.log", "w+");
-    }
-    char c;
-    while ((c = fgetc(logger)) != EOF) {
-        if (c == '\n') {
-            (*line_count)++;
-        }
-    }
-    // close logger
-    fclose(logger);
-
-    // child process
-    log_message();
-
-    return 0;
-}
-
-int log_message(){ //child process
-    printf("logger.c: child process log_message started\n");
-    char buffer[BUFSIZ];
-    char message[BUFSIZ];
-    int count = 0;
-    char ts[64];
-
-    FILE * log;
-    log = fopen("gateway.log", "a");
+    logger = fopen("gateway.log", "w");
+    fprintf(logger,"start of test\n");
 
     // clear the buffer
     memset(buffer, 0, BUFSIZ);
@@ -65,16 +43,16 @@ int log_message(){ //child process
             message[i-j] = buffer[i];
             if(buffer[i] == '\0'){
                 if(message[0] != '\0'){
-                    // <sequence number> // solve later
+                    // <sequence number>
                     (*line_count)++;
                     count = *line_count;
-                    // <timestamp> // num of sec since 01/01/70
+                    // <timestamp>
                     time_t t = time(NULL);
                     struct tm *tm = localtime(&t);
                     strftime(ts, sizeof(ts), "%F %T", tm);
                     // combine <sequence number> <timestamp> <log-event info log_message>
-                    printf("logger.c: full log message: %d, %s, %s\n", count, ts, message);
-                    fprintf(log,"%d, %s, %s\n", count, ts, message);
+                    printf("sensor_db.c: full log message: %d, %s, %s\n", count, ts, message);
+                    fprintf(logger,"%d, %s, %s\n", count, ts, message);
                 }
                 buffer[i] = ' ';
                 // reset j such that i - j is 0 for the next char of the buffer
@@ -83,8 +61,9 @@ int log_message(){ //child process
         }
         memset(message, ' ', BUFSIZ); // clear message
     }
-    fclose(log); // for now, we'll open and close the log file every time
-    printf("logger.c: child process log_message finished\n");
+    fprintf(logger,"end of test\n");
+    fclose(logger); // for now, we'll open and close the log file every time
+
     close(fd[READ_END]);
 
     return 0;

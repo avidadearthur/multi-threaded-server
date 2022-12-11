@@ -11,16 +11,6 @@
 #define READ_END 0
 #define WRITE_END 1
 
-
-/**
- * Spawn a child process that will run the logger function in milestone.
- * The child process will read the events through a pipe that is created
- * when the sensor_db file is open.
- *
- * \return integer error code
- * */
-int spawn_logger();
-
 /**
  * Operation to update the log file. Each line of the log file is structured
  * as follows:  <sequence number> <timestamp> <log-event info message>
@@ -36,4 +26,4 @@ int spawn_logger();
  *     3 - The csv file has been closed.
  *
  */
-int log_message();
+int log_messages();
