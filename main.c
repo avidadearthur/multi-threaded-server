@@ -4,32 +4,25 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <inttypes.h>
+#include <sys/types.h>
+#include <sys/wait.h>
 #include "config.h"
-#include "lib/tcpsock.h"
-#include "lib/dplist.h"
 #include <pthread.h>
 #include <unistd.h>
 #include <string.h>
 #include "sensor_db.h"
+#include "connmgr.h"
 
-#define PORT 5678   // default port number for testing
-#define MAX_CONN 3  // state the max. number of connections the server will handle before exiting
 
 /** Global vars*/
 int fd[2]; // file descriptor for the pipe
-bool logger_running = false; // flag to check if the logger is running
 pthread_mutex_t pipe_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 /** Parent process treads */
 //void *storage_manager(void);
 //void *data_manager(void);
-
-void *connection_manager(void *port);
-
-/** Connection manager will listen on a  TCP socket and
- * will spawn a client manager for each new connection */
-void *client_manager(void *client);
+//void *connection_manager(void *port);
+//void *client_manager(void *client);
 
 /**
  * The sensor gateway has a main process and a logger (child) process.
@@ -78,11 +71,13 @@ int main(int argc, char *argv[]) {
         case -1:
             perror("main: Fork failed\n");
             exit(EXIT_FAILURE);
+
         case 0:
             // child process
             close(fd[WRITE_END]);
             log_messages();
-
+            close(fd[READ_END]);
+            exit(EXIT_SUCCESS);
         default:
             // parent process
             close(fd[READ_END]);
@@ -98,16 +93,19 @@ int main(int argc, char *argv[]) {
             // TODO: close all threads and exit
             // wait for the connection manager thread to finish
             pthread_join(connection_manager_thread, NULL);
+            // wait for the child process to finish
+            close(fd[WRITE_END]);
+            wait(NULL);
     }
-
 }
 
-
-/** helper function */
+/** Logger functions */
 
 int write_to_pipe(char *message, int arg) {
     char *log_event_message;
 
+    // lock the pipe
+    pthread_mutex_lock(&pipe_mutex);
     if (arg != -1){
         log_event_message = (char *) malloc(sizeof(char) * 100);
 
@@ -115,107 +113,65 @@ int write_to_pipe(char *message, int arg) {
         log_event_message = realloc(log_event_message, strlen(log_event_message)+1); // trim the string
 
         write(fd[WRITE_END], log_event_message, strlen(log_event_message)+1);
+        free(log_event_message);
     }
     else {
         write(fd[WRITE_END], message, strlen(message)+1);
     }
 
+    // unlock the pipe
+    pthread_mutex_unlock(&pipe_mutex);
+
     return 0;
 }
 
 
-/** Parent process treads */
+int log_messages(){ //child process
+    printf("sensor_db.c: child process log_message started\n");
+    char buffer[BUFSIZ];
+    char message[BUFSIZ];
+    int line_count = 0;
+    char ts[64];
 
-void *connection_manager(void *port) {
-    tcpsock_t *server, *client;
-    pthread_t tid;
-    char *message;
-    int port_number = *(int *) port;
-    pthread_t connections[MAX_CONN];
-    int conn_count = 0;
+    // open logger and count number of lines
+    FILE *logger;
+    logger = fopen("gateway.log", "w");
+    fprintf(logger,"start of test\n");
 
-    // --------------------Connection manager thread start Event-----------------//
-    message = "Connection manager thread started.";
-    write_to_pipe(message, -1);
-    // --------------------------------------------------------------------------//
-    if (tcp_passive_open(&server, port_number) != TCP_NO_ERROR) exit(EXIT_FAILURE);
+    // clear the buffer
+    memset(buffer, 0, BUFSIZ);
 
-    // ------------------------------Starting server Event-----------------------//
-    message = "Test server started at port %d.";
-    write_to_pipe(message, port_number);
-    // --------------------------------------------------------------------------//
-
-    do {
-        if (tcp_wait_for_connection(server, &client) != TCP_NO_ERROR) exit(EXIT_FAILURE);
-        printf("connection_manager: Incoming client connection.\n");
-        pthread_create(&tid, NULL,  client_manager, client);
-        connections[conn_count] = tid;
-        conn_count++;
-
-    } while (conn_count < MAX_CONN);
-
-    // For each connection, wait for the thread to finish, if during test you kill the thread with ctrl-c
-    // the loop bellow will join a thread that already finished, this is not a problem.
-    for (int i = 0; i < conn_count; i++) {
-        pthread_join(connections[i], NULL);
-    }
-    // --------------------Connection manager thread start Event-----------------------//
-    message = "Max connections reached. Server is closing.";
-    write_to_pipe(message, -1);
-    // -------------------------------------------------------------------------------//
-    // --------------------Connection manager thread start Event-----------------------//
-    message = "Connection manager thread will exit.";
-    write_to_pipe(message, -1);
-    // -------------------------------------------------------------------------------//
-    pthread_exit(NULL);
-
-}
-
-void *client_manager(void *client){
-
-    bool new_connection = true;
-    char *message;
-    sensor_data_t data;
-    int bytes, result;
-    tcpsock_t *client_sock = (tcpsock_t *) client;
-
-    do {
-        // read sensor ID
-        bytes = sizeof(data.id);
-        tcp_receive(client_sock, (void *) &data.id, &bytes);
-
-        if (new_connection) {
-            // -----------------------New client connection Event-------------------------//
-            message = "New connection from sensor %d.";
-            write_to_pipe(message, data.id);
-            // ---------------------------------------------------------------------------//
-
-            new_connection = false;
+    // read is looping over every byte in the pipe
+    // and is a blocking call until there's something to read
+    // or the pipe is closed
+    while(read( fd[READ_END], buffer, BUFSIZ) > 0 ) {
+        int j = 0;
+        memset(message, ' ', BUFSIZ); // make sure its empty
+        // look for null terminator in buffer
+        for(int i= 0; i < BUFSIZ; i++){
+            // copy every byte until the null terminator
+            message[i-j] = buffer[i];
+            if(buffer[i] == '\0'){
+                if(message[0] != '\0'){
+                    // <sequence number>
+                    line_count++;
+                    // <timestamp>
+                    time_t t = time(NULL);
+                    struct tm *tm = localtime(&t);
+                    strftime(ts, sizeof(ts), "%F %T", tm);
+                    // combine <sequence number> <timestamp> <log-event info log_message>
+                    printf("sensor_db.c: full log message: %d, %s, %s\n", line_count, ts, message);
+                    fprintf(logger,"%d, %s, %s\n", line_count, ts, message);
+                }
+                buffer[i] = ' ';
+                // reset j such that i - j is 0 for the next char of the buffer
+                j = i + 1;
+            }
         }
-
-        // read temperature
-        bytes = sizeof(data.value);
-        tcp_receive(client_sock, (void *) &data.value, &bytes);
-        // read timestamp
-        bytes = sizeof(data.ts);
-        result = tcp_receive(client_sock, (void *) &data.ts, &bytes);
-        if ((result == TCP_NO_ERROR) && bytes) {
-            // this will go into the sbuffer
-            printf("sensor id = %" PRIu16 " - temperature = %g - timestamp = %ld\n", data.id, data.value,
-                   (long int) data.ts);
-        }
-    } while (result == TCP_NO_ERROR);
-    if (result == TCP_CONNECTION_CLOSED){
-        // log this into the log file
-        // ----------------------------Client closing connection Event-------------------//
-        message = "Sensor node %d has closed connection.";
-        write_to_pipe(message, data.id);
-        // ------------------------------------------------------------------------------//
+        memset(message, ' ', BUFSIZ); // clear message
     }
-    else {
-        printf("Error occurred on connection to peer\n");
-    }
-    tcp_close(&client_sock);
+    fprintf(logger,"end of test\n");
+    fclose(logger); // for now, we'll open and close the log file every time
 
-    pthread_exit(NULL);
+    return 0;
 }
