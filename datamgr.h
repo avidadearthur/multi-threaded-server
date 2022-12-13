@@ -32,12 +32,17 @@
                     } while(0)
 
 /**
+ * sensor_element_t is a struct that holds the information of a sensor
+ * its definition is in datamgr.c
+ */
+typedef struct sensor_element sensor_t;
+
+/**
  *  This method holds the core functionality of your datamgr. It takes in 2 file pointers to the sensor files and parses them. 
  *  When the method finishes all data should be in the internal pointer list and all log messages should be printed to stderr.
  *  \param fp_sensor_map file pointer to the map file
- *  \param fp_sensor_data file pointer to the binary data file
  */
-void datamgr_parse_sensor_files(FILE *fp_sensor_map, FILE *fp_sensor_data);
+void datamgr_parse_sensor_files(FILE *fp_sensor_map);
 
 /**
  * This method should be called to clean up the datamgr, and to free all used memory. 
@@ -74,5 +79,14 @@ time_t datamgr_get_last_modified(sensor_id_t sensor_id);
  *  \return the total amount of sensors
  */
 int datamgr_get_total_sensors();
+
+
+/**
+ * \brief Returns the reference to the next list node in the list.
+ * Just for testing purposes.
+ */
+dplist_t * datamgr_get_sensors();
+
+sensor_t *datamgr_get_sensor_by_id(sensor_id_t sensor_id);
 
 #endif  //DATAMGR_H_

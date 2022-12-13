@@ -1,0 +1,18 @@
+1 15
+2 21
+3 37
+4 49
+11 112
+12 129
+13 132
+14 142
+room ID 1 sensor ID 15
+room ID 2 sensor ID 21
+room ID 3 sensor ID 37
+room ID 4 sensor ID 49
+room ID 11 sensor ID 112
+room ID 12 sensor ID 129
+room ID 13 sensor ID 132
+room ID 14 sensor ID 142
+
+Process finished with exit code 0

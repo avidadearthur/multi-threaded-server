@@ -22,4 +22,5 @@ typedef struct {
 } sensor_data_t;
 
 
+
 #endif /* _CONFIG_H_ */

@@ -96,7 +96,7 @@ dplist_node_t *dpl_get_reference_at_index(dplist_t *list, int index);
  * \param index the position of the node for which the sensor is returned
  * \return a pointer to the sensor at the given index or NULL
  */
-void *dpl_get_sensor_at_index(dplist_t *list, int index);
+void *dpl_get_element_at_index(dplist_t *list, int index);
 
 /** Returns an index to the first list node in the list containing 'sensor'.
  * - the first list node has index 0.
@@ -107,7 +107,7 @@ void *dpl_get_sensor_at_index(dplist_t *list, int index);
  * \param sensor the sensor to look for
  * \return the index of the sensor that matches 'sensor'
  */
-int dpl_get_index_of_sensor(dplist_t *list, void *sensor);
+int dpl_get_index_of_element(dplist_t *list, void *sensor);
 
 /** Returns the sensor contained in the list node with reference 'reference' in the list.
  * - If the list is empty, NULL is returned.
@@ -118,7 +118,7 @@ int dpl_get_index_of_sensor(dplist_t *list, void *sensor);
  * \param reference a pointer to a certain node in the list
  * \return the sensor contained in the list node or NULL
  */
-void *dpl_get_sensor_at_reference(dplist_t *list, dplist_node_t *reference);
+void *dpl_get_element_at_reference(dplist_t *list, dplist_node_t *reference);
 
 #endif  // _DPLIST_H_
 
