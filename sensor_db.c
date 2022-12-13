@@ -13,96 +13,83 @@ extern sbuffer_t *shared_buffer;
 
 void * storage_manager(void *pVoid){
 
-    // Init data as sensor_data_t
+    FILE * db = open_db("data.csv", false);
+
     sensor_data_t data;
     do{
         // read data from buffer
         if (sbuffer_remove(shared_buffer, &data) == 0) { // SBUFFER_SUCCESS 0
-
-            // print data for testing
+            insert_sensor(db, data.id, data.value, data.ts);
             printf("data.id: %d, data.value: %f, data.ts: %ld \n", data.id, data.value, data.ts);
-
         }
     }
     while(data.id != 0);
+
+    close_db(db);
 
     return NULL;
 }
 
 FILE * open_db(char * filename, bool append){ // parent process
-    // spawns the logger process (child)
-    //if(!is_logger_running) spawn_logger();
-    char *log_event_message;
+    char *message;
 
     FILE *db;
     if (append) {
         db = fopen(filename, "a");
-        log_event_message = "A new csv file is created or an existing file has been opened.";
-        // --------------------DB Open Event-----------------//
-        write(fd[WRITE_END], log_event_message, strlen(log_event_message)+1);
+        // --------------------DB Open append Event----------------------------------//
+        message = "An existing file has been opened.";
+        write_to_pipe(message, -1);
+        // --------------------------------------------------------------------------//
     } else {
-        db = fopen(filename, "w+");
-        log_event_message = "A new csv file is created or an existing file has been opened.";
-        // --------------------DB Open Event-----------------//
-        write(fd[WRITE_END], log_event_message, strlen(log_event_message)+1);
+        db = fopen(filename, "w");
+        // --------------------DB Open create Event----------------------------------//
+        message = "A new csv file has been opened.";
+        write_to_pipe(message, -1);
+        // --------------------------------------------------------------------------//
     }
 
     return db;
 }
 
 int insert_sensor(FILE * db, sensor_id_t id, sensor_value_t value, sensor_ts_t ts){ // parent process
+    char *message;
 
-    char *log_event_message;
     if (!db) {
-        log_event_message = "An error occurred when writing to the csv file.";
-        // --------------------Fail Insert Sensor Event---------------//
-        // trying to insert the sensor before the file is created
-        // will not log anything, there's no child,
-        // but it will work if you have other files open - solve later
-        write(fd[WRITE_END], log_event_message, strlen(log_event_message)+1);
-        close(fd[WRITE_END]);
-        wait(NULL); // wait for the child to finish
-
+        // --------------------Fail Insert Sensor Event-------------------------------//
+        message = "An error occurred when writing to the csv file.";
+        write_to_pipe(message, -1);
+        // --------------------------------------------------------------------------//
 
         return -1;
     }
-    //printf("sensor_db.c: FILE log is: %p \n", &db);
 
     struct tm *tsm = gmtime(&ts);
     char timestamp[256];
     strftime(timestamp, sizeof(timestamp), "%F %T", tsm);
     fprintf(db, "%d, %f, %s\n", id, value, timestamp);
 
-    log_event_message = "Data insertion succeeded.";
-    // --------------------Insert Sensor Event---------------//
-    write(fd[WRITE_END], log_event_message, strlen(log_event_message)+1);
+    // --------------------Insert Sensor Event succeeded----------------------------------//
+    message = "Data insertion from sensor %d succeeded.";
+    write_to_pipe(message, id);
 
     return 0;
 
 }
 
 int close_db(FILE * f){ // parent process
-
-    char *log_event_message;
-    if (!f) {
-        //if(!is_logger_running) spawn_logger();
-        log_event_message = "An error occurred when closing the csv file.";
-        // ------------------DB Close fail Event-----------------//
-        write(fd[WRITE_END], log_event_message, strlen(log_event_message)+1);
-        close(fd[WRITE_END]);
-        wait(NULL); // wait for the child to finish
-
+    char *message;
+    if (fclose(f) != 0) {
+        message = "An error occurred when closing the csv file.";
+        // --------------------Fail DB Close Event----------------------------------//
+        write_to_pipe(message, -1);
+        // --------------------------------------------------------------------------//
         return -1;
     }
-    fclose(f);
-
-    log_event_message = "The csv file has been closed.";
-    // ------------------DB Close Event-----------------//
-    write(fd[WRITE_END], log_event_message, strlen(log_event_message)+1);
-
-    close(fd[WRITE_END]);
-    wait(NULL); // wait for the child to finish
-
+    message = "The csv file has been closed.";
+    // --------------------DB Close Event------------------------------------//
+    write_to_pipe(message, -1);
+    // ---------------------------------------------------------------------//
     return 0;
+
 }
 

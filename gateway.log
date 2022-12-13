@@ -1,13 +1,63 @@
 start of test
-1, 2022-12-11 20:38:12, Connection manager thread started.
-2, 2022-12-11 20:38:12, Test server started at port 5678.
-3, 2022-12-11 20:42:58, New connection from sensor 1.
-4, 2022-12-11 20:43:38, Sensor node 1 has closed connection.
-5, 2022-12-11 20:43:42, New connection from sensor 3.
-6, 2022-12-11 20:43:43, Sensor node 3 has closed connection.
-7, 2022-12-11 20:43:53, New connection from sensor 2.
-8, 2022-12-11 20:43:54, Sensor node 2 has closed connection.
-9, 2022-12-11 20:43:54, Max connections reached. Server is closing.
-10, 2022-12-11 20:43:54, Server closed TCP port.
-11, 2022-12-11 20:43:54, Connection manager thread will exit.
+1, 2022-12-13 14:08:53, A new csv file has been opened.
+2, 2022-12-13 14:08:53, Connection manager thread started.
+3, 2022-12-13 14:08:53, Test server started at port 1234.
+4, 2022-12-13 14:09:07, New connection from sensor 1.
+5, 2022-12-13 14:09:07, Data insertion from sensor 1 succeeded.
+6, 2022-12-13 14:09:09, Data insertion from sensor 1 succeeded.
+7, 2022-12-13 14:09:10, Data insertion from sensor 1 succeeded.
+8, 2022-12-13 14:09:11, Data insertion from sensor 1 succeeded.
+9, 2022-12-13 14:09:12, Data insertion from sensor 1 succeeded.
+10, 2022-12-13 14:09:13, Data insertion from sensor 1 succeeded.
+11, 2022-12-13 14:09:14, Data insertion from sensor 1 succeeded.
+12, 2022-12-13 14:09:15, Data insertion from sensor 1 succeeded.
+13, 2022-12-13 14:09:16, Data insertion from sensor 1 succeeded.
+14, 2022-12-13 14:09:17, Data insertion from sensor 1 succeeded.
+15, 2022-12-13 14:09:17, New connection from sensor 1.
+16, 2022-12-13 14:09:17, Data insertion from sensor 1 succeeded.
+17, 2022-12-13 14:09:18, Data insertion from sensor 1 succeeded.
+18, 2022-12-13 14:09:18, Data insertion from sensor 1 succeeded.
+19, 2022-12-13 14:09:19, Data insertion from sensor 1 succeeded.
+20, 2022-12-13 14:09:19, Data insertion from sensor 1 succeeded.
+21, 2022-12-13 14:09:20, Data insertion from sensor 1 succeeded.
+22, 2022-12-13 14:09:20, Data insertion from sensor 1 succeeded.
+23, 2022-12-13 14:09:21, Data insertion from sensor 1 succeeded.
+24, 2022-12-13 14:09:21, Data insertion from sensor 1 succeeded.
+25, 2022-12-13 14:09:22, Data insertion from sensor 1 succeeded.
+26, 2022-12-13 14:09:22, Data insertion from sensor 1 succeeded.
+27, 2022-12-13 14:09:23, Data insertion from sensor 1 succeeded.
+28, 2022-12-13 14:09:23, Data insertion from sensor 1 succeeded.
+29, 2022-12-13 14:09:24, Data insertion from sensor 1 succeeded.
+30, 2022-12-13 14:09:25, Data insertion from sensor 1 succeeded.
+31, 2022-12-13 14:09:25, Data insertion from sensor 1 succeeded.
+32, 2022-12-13 14:09:26, Data insertion from sensor 1 succeeded.
+33, 2022-12-13 14:09:26, Data insertion from sensor 1 succeeded.
+34, 2022-12-13 14:09:27, Data insertion from sensor 1 succeeded.
+35, 2022-12-13 14:09:27, Data insertion from sensor 1 succeeded.
+36, 2022-12-13 14:09:28, Data insertion from sensor 1 succeeded.
+37, 2022-12-13 14:09:28, Data insertion from sensor 1 succeeded.
+38, 2022-12-13 14:09:29, Data insertion from sensor 1 succeeded.
+39, 2022-12-13 14:09:29, Data insertion from sensor 1 succeeded.
+40, 2022-12-13 14:09:30, Data insertion from sensor 1 succeeded.
+41, 2022-12-13 14:09:30, Data insertion from sensor 1 succeeded.
+42, 2022-12-13 14:09:31, Data insertion from sensor 1 succeeded.
+43, 2022-12-13 14:09:31, Data insertion from sensor 1 succeeded.
+44, 2022-12-13 14:09:32, New connection from sensor 3.
+45, 2022-12-13 14:09:32, Data insertion from sensor 3 succeeded.
+46, 2022-12-13 14:09:32, Data insertion from sensor 1 succeeded.
+47, 2022-12-13 14:09:32, Data insertion from sensor 1 succeeded.
+48, 2022-12-13 14:09:33, Data insertion from sensor 1 succeeded.
+49, 2022-12-13 14:09:33, Data insertion from sensor 1 succeeded.
+50, 2022-12-13 14:09:34, Data insertion from sensor 1 succeeded.
+51, 2022-12-13 14:09:34, Data insertion from sensor 1 succeeded.
+52, 2022-12-13 14:09:35, Data insertion from sensor 1 succeeded.
+53, 2022-12-13 14:09:35, Data insertion from sensor 3 succeeded.
+54, 2022-12-13 14:09:35, Data insertion from sensor 1 succeeded.
+55, 2022-12-13 14:09:36, Sensor node 1 has closed connection.
+56, 2022-12-13 14:09:36, The csv file has been closed.
+57, 2022-12-13 14:09:37, Sensor node 1 has closed connection.
+58, 2022-12-13 14:09:39, Sensor node 3 has closed connection.
+59, 2022-12-13 14:09:39, Max connections reached. Server is closing.
+60, 2022-12-13 14:09:39, Server closed TCP port.
+61, 2022-12-13 14:09:39, Connection manager thread will exit.
 end of test

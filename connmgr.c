@@ -62,6 +62,13 @@ void *connection_manager(void *port) {
         message = "Server closed TCP port.";
         write_to_pipe(message, -1);
         // --------------------------------------------------------------------//
+
+        // Add dummy data to buffer to signal end of file
+        sensor_data_t sensor_data;
+        sensor_data.id = 0;
+        sensor_data.value = 0;
+        sensor_data.ts = 0;
+        sbuffer_insert(shared_buffer, &sensor_data);
     }
     // ---------------Connection manager thread start Event--------------------//
     message = "Connection manager thread will exit.";
@@ -118,14 +125,6 @@ void *client_manager(void *client){
         message = "Sensor node %d has closed connection.";
         write_to_pipe(message, data.id);
         // -------------------------------------------------------------------//
-
-        // Add dummy data to buffer to signal end of file
-        sensor_data_t sensor_data;
-        sensor_data.id = 0;
-        sensor_data.value = 0;
-        sensor_data.ts = 0;
-        sbuffer_insert(shared_buffer, &sensor_data);
-
     }
     else {
         printf("Error occurred on connection to peer\n");
