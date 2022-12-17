@@ -16,12 +16,19 @@ void * storage_manager(void *pVoid){
     FILE * db = open_db("data.csv", false);
 
     sensor_data_t data;
+    sensor_ts_t prev_ts = 0;
+    sensor_id_t prev_id = 0;
     do{
         // read data from buffer
         if (sbuffer_remove(shared_buffer, &data) == 0) { // SBUFFER_SUCCESS 0
+            if (prev_id == data.id && prev_ts == data.ts) {
+                // duplicate data
+                continue;
+            }
             insert_sensor(db, data.id, data.value, data.ts);
-            printf("data.id: %d, data.value: %f, data.ts: %ld \n", data.id, data.value, data.ts);
         }
+        prev_ts = data.ts;
+        prev_id = data.id;
     }
     while(data.id != 0);
 
@@ -53,6 +60,7 @@ FILE * open_db(char * filename, bool append){ // parent process
 
 int insert_sensor(FILE * db, sensor_id_t id, sensor_value_t value, sensor_ts_t ts){ // parent process
     char *message;
+    char timestamp[64];
 
     if (!db) {
         // --------------------Fail Insert Sensor Event-------------------------------//
@@ -63,14 +71,17 @@ int insert_sensor(FILE * db, sensor_id_t id, sensor_value_t value, sensor_ts_t t
         return -1;
     }
 
-    struct tm *tsm = gmtime(&ts);
-    char timestamp[256];
-    strftime(timestamp, sizeof(timestamp), "%F %T", tsm);
+    // <timestamp>
+    time_t t = time(NULL);
+    struct tm *tm = localtime(&t);
+    strftime(timestamp, sizeof(timestamp), "%F %T", tm);
     fprintf(db, "%d, %f, %s\n", id, value, timestamp);
+    //printf("sensor_db.c: data.id: %d, data.value: %f, data.ts: %s \n", id, value, timestamp);
 
     // --------------------Insert Sensor Event succeeded----------------------------------//
     message = "Data insertion from sensor %d succeeded.";
     write_to_pipe(message, id);
+    // ----------------------------------------------------------------------------------//
 
     return 0;
 

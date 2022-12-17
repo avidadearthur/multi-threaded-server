@@ -4,11 +4,18 @@
 
 #include "connmgr.h"
 #include "datamgr.h"
+#include "sbuffer.h"
 
 /** Global vars*/
 extern int fd[2]; // file descriptor for the pipe
 extern pthread_mutex_t pipe_mutex;
 extern sbuffer_t *shared_buffer;
+
+sensor_id_t *seen_nodes;
+int seen_nodes_size;
+
+
+bool sensor_id_in_array(sensor_id_t id, sensor_id_t *pInt, int size);
 
 /** Parent process thread */
 
@@ -92,10 +99,40 @@ void *client_manager(void *client){
         tcp_receive(client_sock, (void *) &data.id, &bytes);
 
         if (new_connection) {
-            // --------------------New client connection Event-----------------//
-            message = "New connection from sensor %d.";
-            write_to_pipe(message, data.id);
-            // ----------------------------------------------------------------//
+
+            // Check if sensor ID is valid (it is in the room_sensor.map file)
+            // and if it has not already been registered
+            if (datamgr_get_sensor_by_id(data.id) == NULL) {
+                // ------------------Invalid sensor ID Event----------------------//
+                message = "Invalid sensor ID.";
+                write_to_pipe(message, data.id);
+                // --------------------------------------------------------------//
+                result = TCP_CONNECTION_CLOSED;
+                break;
+            }
+            else if (sensor_id_in_array(data.id, seen_nodes, seen_nodes_size)) {
+                // ------------------Duplicate sensor ID Event--------------------//
+                message = "Duplicate sensor ID.";
+                write_to_pipe(message, data.id);
+                // --------------------------------------------------------------//
+                result = TCP_CONNECTION_CLOSED;
+                break;
+            }
+            else {
+                // --------------------New client connection Event-----------------//
+                message = "New connection from sensor %d.";
+                write_to_pipe(message, data.id);
+                // ----------------------------------------------------------------//
+                seen_nodes_size++;
+                seen_nodes = realloc(seen_nodes, seen_nodes_size * sizeof(sensor_id_t *));
+                // free memory if realloc fails
+                if (seen_nodes == NULL) {
+                    perror("realloc");
+                    exit(EXIT_FAILURE);
+                }
+
+                seen_nodes[seen_nodes_size - 1] = data.id;
+            }
 
             new_connection = false;
         }
@@ -117,9 +154,18 @@ void *client_manager(void *client){
             // insert sensor_data into buffer
             sbuffer_insert(shared_buffer, &sensor_data);
 
-            // printf("sensor id = %" PRIu16 " - temperature = %g - timestamp = %ld\n", data.id, data.value, (long int) data.ts);
+            // for testing purposes
+            // format sensor_data.ts to readable time
+            time_t time = sensor_data.ts;
+            struct tm *timeinfo = localtime(&time);
+            char timestamp[80];
+            strftime(timestamp, 80, "%F %T", timeinfo);
+
+            printf("connmgr.c: data.id: %d, data.value: %f, data.ts: %s \n", data.id, data.value, timestamp);
+            //printf("sensor id = %" PRIu16 " - temperature = %g - timestamp = %ld\n", data.id, data.value, (long int) data.ts);
         }
     } while (result == TCP_NO_ERROR);
+
     if (result == TCP_CONNECTION_CLOSED){
         // ------------------Client closing connection Event------------------//
         message = "Sensor node %d has closed connection.";
@@ -132,4 +178,13 @@ void *client_manager(void *client){
     tcp_close(&client_sock);
 
     pthread_exit(NULL);
+}
+
+bool sensor_id_in_array(sensor_id_t id, sensor_id_t *array, int size) {
+    for (int i = 0; i < size; i++) {
+        if (array[i] == id) {
+            return true;
+        }
+    }
+    return false;
 }

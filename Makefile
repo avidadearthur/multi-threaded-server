@@ -56,12 +56,17 @@ clean-all: clean
 run : sensor_gateway sensor_node
 	@echo "Add your own implementation here..."
 
-build_test: main.c sensor_db.c connmgr.c sbuffer.c lib/tcpsock.c lib/dplist.c
+build_test: main.c sensor_db.c connmgr.c datamgr.c sbuffer.c lib/tcpsock.c lib/dplist.c
 	gcc sensor_node.c lib/tcpsock.c -o sensor_node
-	gcc -g -Wall -Werror -o test_server main.c sensor_db.c connmgr.c sbuffer.c lib/tcpsock.c lib/dplist.c -lm -lpthread
+	gcc -g -Wall -Werror -D SET_MAX_TEMP=20 -D SET_MIN_TEMP=19 -o test_server main.c sensor_db.c connmgr.c datamgr.c sbuffer.c lib/tcpsock.c lib/dplist.c -lm -lpthread
 
 run_server:
 	./test_server
+
+run_clients:
+	./sensor_node 15 1 127.0.0.1 5678 &
+	./sensor_node 21 3 127.0.0.1 5678 &
+	./sensor_node 37 2 127.0.0.1 5678 &
 
 runclient1: sensor_node
 	./sensor_node 1 2 127.0.0.1 $(port)

@@ -12,6 +12,7 @@
 #include <string.h>
 #include "sensor_db.h"
 #include "connmgr.h"
+#include "datamgr.h"
 #include "sbuffer.h"
 
 
@@ -77,6 +78,8 @@ int main(int argc, char *argv[]) {
             pthread_create(&connection_manager_thread, NULL, connection_manager, &port_number);
 
             // TODO: run data manager thread
+            pthread_t data_manager_thread;
+            pthread_create(&data_manager_thread, NULL, data_manager, NULL);
 
             // TODO: run storage manager thread
             pthread_t storage_manager_thread;
@@ -85,6 +88,8 @@ int main(int argc, char *argv[]) {
             // TODO: close all threads and exit
             // wait for the connection manager thread to finish
             pthread_join(connection_manager_thread, NULL);
+            // wait for the data manager thread to finish
+            pthread_join(data_manager_thread, NULL);
             pthread_join(storage_manager_thread, NULL);
             // wait for the child process to finish
             close(fd[WRITE_END]);
@@ -92,6 +97,7 @@ int main(int argc, char *argv[]) {
 
             // free buffer
             sbuffer_free(&shared_buffer);
+            datamgr_free();
     }
 }
 
@@ -105,9 +111,18 @@ int write_to_pipe(char *message, int arg) {
     pthread_mutex_lock(&pipe_mutex);
     if (arg != -1){
         log_event_message = (char *) malloc(sizeof(char) * 100);
+        // free upon failure
+        if (log_event_message == NULL) {
+            perror("write_to_pipe: malloc failed\n");
+            exit(EXIT_FAILURE);
+        }
 
         sprintf(log_event_message, message, arg);
         log_event_message = realloc(log_event_message, strlen(log_event_message)+1); // trim the string
+        if (log_event_message == NULL) {
+            perror("write_to_pipe: malloc failed\n");
+            exit(EXIT_FAILURE);
+        }
 
         write(fd[WRITE_END], log_event_message, strlen(log_event_message)+1);
         free(log_event_message);
@@ -124,7 +139,7 @@ int write_to_pipe(char *message, int arg) {
 
 
 int log_messages(){ //child process
-    printf("sensor_db.c: child process log_message started\n");
+    printf("main.c: child process log_message started\n");
     char buffer[BUFSIZ];
     char message[BUFSIZ];
     int line_count = 0;
@@ -157,7 +172,7 @@ int log_messages(){ //child process
                     struct tm *tm = localtime(&t);
                     strftime(ts, sizeof(ts), "%F %T", tm);
                     // combine <sequence number> <timestamp> <log-event info log_message>
-                    printf("sensor_db.c: full log message: %d, %s, %s\n", line_count, ts, message);
+                    // printf("sensor_db.c: full log message: %d, %s, %s\n", line_count, ts, message);
                     fprintf(logger,"%d, %s, %s\n", line_count, ts, message);
                 }
                 buffer[i] = ' ';
