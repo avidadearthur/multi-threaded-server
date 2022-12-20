@@ -11,6 +11,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <errno.h>
+#include "../config.h"
 
 #include "tcpsock.h"
 
@@ -175,6 +176,13 @@ int tcp_wait_for_connection(tcpsock_t *socket, tcpsock_t **new_socket) {
     s->port = ntohs(addr.sin_port);
     s->cookie = MAGIC_COOKIE;
     *new_socket = s;
+
+    // from: https://stackoverflow.com/questions/2876024/linux-is-there-a-read-or-recv-from-socket-with-timeout
+    struct timeval tv;
+    tv.tv_sec = TIMEOUT;
+    tv.tv_usec = 0;
+    setsockopt((*new_socket)->sd, SOL_SOCKET, SO_RCVTIMEO, (const char*)&tv, sizeof tv);
+
     return TCP_NO_ERROR;
 }
 
@@ -214,6 +222,7 @@ int tcp_receive(tcpsock_t *socket, void *buffer, int *buf_size) {
     TCP_DEBUG_PRINTF((*buf_size < 0) && (errno == ENOTCONN), "Recv() : no connection to peer\n");
     TCP_ERR_HANDLER((*buf_size < 0) && (errno == ENOTCONN), return TCP_CONNECTION_CLOSED);
     TCP_DEBUG_PRINTF(*buf_size < 0, "Recv() failed with errno = %d [%s]", errno, strerror(errno));
+    TCP_ERR_HANDLER((*buf_size < 0) && (errno == EWOULDBLOCK), return TCP_TIMEOUT); // timeout error
     TCP_ERR_HANDLER(*buf_size < 0, return TCP_SOCKOP_ERROR);
     return TCP_NO_ERROR;
 }

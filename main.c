@@ -33,7 +33,7 @@ int main(int argc, char *argv[]) {
     }
     // check for only one command line argument
     else if (argc > 2) {
-        fprintf(stderr, "Usage: %s port (default port is %d)\n", argv[0], PORT);
+        fprintf(stderr, "Usage: %s <PORT> (default port is %d)\n", argv[0], PORT);
         exit(EXIT_FAILURE);
     }
     else {

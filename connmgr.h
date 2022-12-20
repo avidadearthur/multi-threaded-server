@@ -11,6 +11,10 @@
 #include "lib/dplist.h"
 #include "config.h"
 
+#ifndef MAX_CONN
+#define MAX_CONN 3
+#endif
+
 /**
  * The connection manager thread is responsible for:
  * 1. Listening for new connections from sensors on a TCP socket

@@ -10,7 +10,16 @@
 #include <pthread.h>
 
 #define PORT 5678   // default port number for testing
+
+// define timeout in seconds
+#ifndef MAX_CONN
 #define MAX_CONN 3  // state the max. number of connections the server will handle before exiting
+#endif
+
+// define timeout in seconds
+#ifndef TIMEOUT
+#define TIMEOUT 5 // default timeout is 5 seconds
+#endif
 
 #define READ_END 0
 #define WRITE_END 1

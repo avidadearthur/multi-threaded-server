@@ -113,6 +113,7 @@ void *data_manager(void *fp)
                 sprintf(message, "Sensor node %d reports it’s too hot (avg temp = %f)", sensor->sensorId, sensor->avg);
                 message = realloc(message, strlen(message)+1); // trim the string
                 write_to_pipe(message, -1);
+                free(message);
                 // ----------------------------------------------//
             } else if (data.value < SET_MIN_TEMP) {
                 // ----------Temperature too low Event-----------//
@@ -120,18 +121,10 @@ void *data_manager(void *fp)
                 sprintf(message, "Sensor node %d reports it’s too cold (avg temp = %f)", sensor->sensorId, sensor->avg);
                 message = realloc(message, strlen(message)+1); // trim the string
                 write_to_pipe(message, -1);
+                free(message);
                 // ---------------------------------------------//
             }
 
-            // ----------Received sensor data with valid sensor node ID Event-----------//
-/*          message = malloc(sizeof(char) * 100);
-            struct tm *tsm = gmtime(&(sensor->lastModified));
-            char timestamp[256];
-            strftime(timestamp, sizeof(timestamp), "%F %T", tsm);
-            sprintf(message, "Sensor %d, average of last %d samples: %.2f, at %s", sensor->sensorId,RUN_AVG_LENGTH, sensor->avg, timestamp);
-            message = realloc(message, strlen(message)+1); // trim the string
-            write_to_pipe(message, data.id);*/
-            // --------------------------------------------------------------------------//
         }
     }
     while(data.id != 0);
@@ -183,6 +176,11 @@ void datamgr_parse_sensor_files(FILE *fp_sensor_map){
 }
 
 void datamgr_free(){
+    // free the lastValues dplist
+    for (int i = 0; i < dpl_size(sensorList); i++) {
+        sensor_t *sensor = dpl_get_element_at_index(sensorList, i);
+        dpl_free(&sensor->lastValues, true);
+    }
     dpl_free(&sensorList, true);
 }
 

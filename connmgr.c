@@ -96,7 +96,9 @@ void *client_manager(void *client){
     do {
         // read sensor ID
         bytes = sizeof(data.id);
-        tcp_receive(client_sock, (void *) &data.id, &bytes);
+        result = tcp_receive(client_sock, (void *) &data.id, &bytes);
+        // check for timeout
+        if (result == TCP_TIMEOUT) break;
 
         if (new_connection) {
 
@@ -139,10 +141,16 @@ void *client_manager(void *client){
 
         // read temperature
         bytes = sizeof(data.value);
-        tcp_receive(client_sock, (void *) &data.value, &bytes);
+        result = tcp_receive(client_sock, (void *) &data.value, &bytes);
+        // check for timeout
+        if (result == TCP_TIMEOUT) break;
+
         // read timestamp
         bytes = sizeof(data.ts);
         result = tcp_receive(client_sock, (void *) &data.ts, &bytes);
+        // check for timeout
+        if (result == TCP_TIMEOUT) break;
+
         if ((result == TCP_NO_ERROR) && bytes) {
 
             // this will go into the sbuffer
@@ -171,6 +179,14 @@ void *client_manager(void *client){
         message = "Sensor node %d has closed connection.";
         write_to_pipe(message, data.id);
         // -------------------------------------------------------------------//
+    }
+    else if(result == TCP_TIMEOUT){
+        // ------------------Client timeout Event-----------------------------//
+        message = "Sensor node %d has timed out.";
+        write_to_pipe(message, data.id);
+        // -------------------------------------------------------------------//
+        tcp_close(&client_sock);
+        pthread_exit(NULL);
     }
     else {
         printf("Error occurred on connection to peer\n");
