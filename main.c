@@ -29,7 +29,7 @@ int main(int argc, char *argv[]) {
 
     // check command line arguments
     if (argc == 1) {
-        fprintf(stderr, "Using default port %d\n", port_number);
+        fprintf(stdout, "Using default port %d\n", port_number);
     }
     // check for only one command line argument
     else if (argc > 2) {
@@ -71,8 +71,11 @@ int main(int argc, char *argv[]) {
 
             // TODO: initialize the shared buffer
             // Initialize the buffer
-            sbuffer_init(&shared_buffer);
-
+            if(sbuffer_init(&shared_buffer)==SBUFFER_FAILURE){
+                printf("main: Shared buffer initialization failed. Action needed\n");
+                return -1;
+            }
+            // check if the buffer was initialized
             // TODO: run connection manager thread
             pthread_t connection_manager_thread;
             pthread_create(&connection_manager_thread, NULL, connection_manager, &port_number);
@@ -98,6 +101,7 @@ int main(int argc, char *argv[]) {
             // free buffer
             sbuffer_free(&shared_buffer);
             datamgr_free();
+            fprintf(stdout, "Program is over\n");
     }
 }
 
@@ -139,7 +143,7 @@ int write_to_pipe(char *message, int arg) {
 
 
 int log_messages(){ //child process
-    printf("main.c: child process log_message started\n");
+    //printf("main.c: child process log_message started\n");
     char buffer[BUFSIZ];
     char message[BUFSIZ];
     int line_count = 0;

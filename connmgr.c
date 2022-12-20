@@ -40,7 +40,7 @@ void *connection_manager(void *port) {
 
     do {
         if (tcp_wait_for_connection(server, &client) != TCP_NO_ERROR) exit(EXIT_FAILURE);
-        printf("connection_manager: Incoming client connection.\n");
+        //printf("connection_manager: Incoming client connection.\n");
         pthread_create(&tid, NULL,  client_manager, client);
         connections[conn_count] = tid;
         conn_count++;
@@ -106,7 +106,7 @@ void *client_manager(void *client){
             // and if it has not already been registered
             if (datamgr_get_sensor_by_id(data.id) == NULL) {
                 // ------------------Invalid sensor ID Event----------------------//
-                message = "Invalid sensor ID.";
+                message = "Received sensor data with invalid sensor node ID %d" ;
                 write_to_pipe(message, data.id);
                 // --------------------------------------------------------------//
                 result = TCP_CONNECTION_CLOSED;
@@ -114,7 +114,7 @@ void *client_manager(void *client){
             }
             else if (sensor_id_in_array(data.id, seen_nodes, seen_nodes_size)) {
                 // ------------------Duplicate sensor ID Event--------------------//
-                message = "Duplicate sensor ID.";
+                message = "Duplicate sensor data with sensor node ID %d";
                 write_to_pipe(message, data.id);
                 // --------------------------------------------------------------//
                 result = TCP_CONNECTION_CLOSED;
@@ -169,7 +169,7 @@ void *client_manager(void *client){
             char timestamp[80];
             strftime(timestamp, 80, "%F %T", timeinfo);
 
-            printf("connmgr.c: data.id: %d, data.value: %f, data.ts: %s \n", data.id, data.value, timestamp);
+            //printf("connmgr.c: data.id: %d, data.value: %f, data.ts: %s \n", data.id, data.value, timestamp);
             //printf("sensor id = %" PRIu16 " - temperature = %g - timestamp = %ld\n", data.id, data.value, (long int) data.ts);
         }
     } while (result == TCP_NO_ERROR);

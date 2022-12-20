@@ -76,7 +76,7 @@ int sbuffer_peek(sbuffer_t *buffer, sensor_data_t *data) {
     // if the item has not been seen by other threads, just return data without removing it from the buffer
     // but set the seen flag to true
     // print the data that was flagged for testing //
-    printf("sbuffer.c: data.id: %d, data.value: %f has been flagged as seen by thread %lu\n", data->id, data->value, pthread_self());
+    //printf("sbuffer.c: data.id: %d, data.value: %f has been flagged as seen by thread %lu\n", data->id, data->value, pthread_self());
     // print the data that was flagged for testing //
     buffer->head->seen = true;
 
@@ -128,7 +128,7 @@ int sbuffer_remove(sbuffer_t *buffer, sensor_data_t *data) {
     }
 
     // print the data that was flagged for testing //
-    printf("sbuffer.c: data.id: %d, data.value: %f has been removed by thread %lu\n", data->id, data->value, pthread_self());
+    // printf("sbuffer.c: data.id: %d, data.value: %f has been removed by thread %lu\n", data->id, data->value, pthread_self());
     // print the data that has been removed for testing //
     pthread_cond_signal(&empty); // equivalent to pthread_cond_signal(&removing);
 
